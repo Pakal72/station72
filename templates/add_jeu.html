@@ -44,6 +44,33 @@
                 <a href="/jeux" class="btn btn-secondary">Annuler</a>
             </div>
         </form>
+
+        {% if jeu %}
+        <h2>Pages du jeu</h2>
+        <a href="/pages/add?jeu_id={{ jeu.id_jeu }}" class="btn btn-primary">Ajouter</a>
+        <table>
+            <thead>
+                <tr>
+                    <th>Ordre</th>
+                    <th>Titre</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for page in pages %}
+                <tr>
+                    <td>{{ page.ordre }}</td>
+                    <td>{{ page.titre }}</td>
+                    <td>
+                        <a href="/pages/edit/{{ page.id_page }}" class="btn btn-secondary">Modifier</a>
+                        <a href="/pages/delete/{{ page.id_page }}" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette page ?');">Supprimer</a>
+                        <a href="/pages/duplicate/{{ page.id_page }}" class="btn btn-secondary">Dupliquer</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
     </div>
 </body>
 </html>
