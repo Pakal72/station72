@@ -5,6 +5,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 import psycopg2
 from psycopg2.extras import RealDictCursor
+from psycopg2.pool import SimpleConnectionPool
+from contextlib import contextmanager
 from dotenv import load_dotenv
 import os
 import uvicorn
@@ -21,14 +23,34 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-def get_conn():
-    return psycopg2.connect(
+pool: SimpleConnectionPool | None = None
+
+@app.on_event("startup")
+def startup() -> None:
+    global pool
+    pool = SimpleConnectionPool(
+        minconn=1,
+        maxconn=10,
         host=DB_HOST,
         port=DB_PORT,
         dbname=DB_NAME,
         user=DB_USER,
-        password=DB_PASSWORD
+        password=DB_PASSWORD,
     )
+
+@app.on_event("shutdown")
+def shutdown() -> None:
+    if pool:
+        pool.closeall()
+
+@contextmanager
+def get_conn():
+    assert pool is not None, "Connection pool not initialized"
+    conn = pool.getconn()
+    try:
+        yield conn
+    finally:
+        pool.putconn(conn)
 
 @app.get("/jeux")
 def list_jeux(request: Request):
