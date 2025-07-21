@@ -87,12 +87,20 @@ def add_jeu(
 
 @app.get("/jeux/edit/{jeu_id}")
 def edit_jeu_form(request: Request, jeu_id: int):
-    """Affiche le formulaire d'édition pré-rempli."""
+    """Affiche le formulaire d'édition pré-rempli et la liste des pages."""
     with get_conn() as conn:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute("SELECT * FROM jeux WHERE id_jeu = %s", (jeu_id,))
             jeu = cur.fetchone()
-    return templates.TemplateResponse("add_jeu.html", {"request": request, "jeu": jeu})
+            cur.execute(
+                "SELECT * FROM pages WHERE id_jeu = %s ORDER BY ordre",
+                (jeu_id,),
+            )
+            pages = cur.fetchall()
+    return templates.TemplateResponse(
+        "add_jeu.html",
+        {"request": request, "jeu": jeu, "pages": pages},
+    )
 
 
 @app.post("/jeux/edit/{jeu_id}")
@@ -122,6 +130,87 @@ def delete_jeu(jeu_id: int):
             cur.execute("DELETE FROM jeux WHERE id_jeu=%s", (jeu_id,))
             conn.commit()
     return RedirectResponse(url="/jeux", status_code=303)
+
+
+@app.get("/pages/add")
+def add_page_form(request: Request, jeu_id: int):
+    """Formulaire d'ajout d'une page."""
+    return templates.TemplateResponse(
+        "add_page.html", {"request": request, "jeu_id": jeu_id}
+    )
+
+
+@app.post("/pages/add")
+def add_page(
+    jeu_id: int = Form(...),
+    titre: str = Form(...),
+    ordre: int = Form(...),
+    contenu: str = Form(""),
+):
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO pages (id_jeu, titre, ordre, contenu) VALUES (%s, %s, %s, %s)",
+                (jeu_id, titre, ordre, contenu),
+            )
+            conn.commit()
+    return RedirectResponse(url=f"/jeux/edit/{jeu_id}", status_code=303)
+
+
+@app.get("/pages/edit/{page_id}")
+def edit_page_form(request: Request, page_id: int):
+    with get_conn() as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("SELECT * FROM pages WHERE id_page=%s", (page_id,))
+            page = cur.fetchone()
+    return templates.TemplateResponse("add_page.html", {"request": request, "page": page})
+
+
+@app.post("/pages/edit/{page_id}")
+def edit_page(
+    page_id: int,
+    titre: str = Form(...),
+    ordre: int = Form(...),
+    contenu: str = Form(""),
+):
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "UPDATE pages SET titre=%s, ordre=%s, contenu=%s WHERE id_page=%s",
+                (titre, ordre, contenu, page_id),
+            )
+            cur.execute("SELECT id_jeu FROM pages WHERE id_page=%s", (page_id,))
+            jeu_id = cur.fetchone()[0]
+            conn.commit()
+    return RedirectResponse(url=f"/jeux/edit/{jeu_id}", status_code=303)
+
+
+@app.get("/pages/delete/{page_id}")
+def delete_page(page_id: int):
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT id_jeu FROM pages WHERE id_page=%s", (page_id,))
+            jeu_id = cur.fetchone()[0]
+            cur.execute("DELETE FROM pages WHERE id_page=%s", (page_id,))
+            conn.commit()
+    return RedirectResponse(url=f"/jeux/edit/{jeu_id}", status_code=303)
+
+
+@app.get("/pages/duplicate/{page_id}")
+def duplicate_page(page_id: int):
+    with get_conn() as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute(
+                "SELECT id_jeu, titre, ordre, contenu FROM pages WHERE id_page=%s",
+                (page_id,),
+            )
+            page = cur.fetchone()
+            cur.execute(
+                "INSERT INTO pages (id_jeu, titre, ordre, contenu) VALUES (%s, %s, %s, %s)",
+                (page["id_jeu"], page["titre"], page["ordre"], page["contenu"]),
+            )
+            conn.commit()
+    return RedirectResponse(url=f"/jeux/edit/{page['id_jeu']}", status_code=303)
 
 if __name__ == "__main__":
     
