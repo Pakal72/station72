@@ -23,7 +23,7 @@
                     <td>{{ jeu.auteur }}</td>
                     <td>
                         <a href="/jeux/edit/{{ jeu.id_jeu }}" class="btn btn-secondary">Modifier</a>
-                        <a href="/jeux/delete/{{ jeu.id_jeu }}" class="btn btn-danger">Supprimer</a>
+                        <a href="/jeux/delete/{{ jeu.id_jeu }}" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce jeu ?');">Supprimer</a>
                     </td>
                 </tr>
                 {% endfor %}

@@ -1,20 +1,29 @@
 <!DOCTYPE html>
 <html>
 <head>
+    {% if jeu %}
+    <title>Modifier un jeu</title>
+    {% else %}
     <title>Ajouter un jeu</title>
+    {% endif %}
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
     <div class="container">
+        {% if jeu %}
+        <h1>✏️ Modifier un jeu</h1>
+        <form action="/jeux/edit/{{ jeu.id_jeu }}" method="post">
+        {% else %}
         <h1>➕ Ajouter un jeu</h1>
         <form action="/jeux/add" method="post">
+        {% endif %}
             <div>
                 <label for="titre">Titre :</label>
-                <input type="text" id="titre" name="titre" required>
+                <input type="text" id="titre" name="titre" value="{{ jeu.titre if jeu else '' }}" required>
             </div>
             <div>
                 <label for="auteur">Auteur :</label>
-                <input type="text" id="auteur" name="auteur" required>
+                <input type="text" id="auteur" name="auteur" value="{{ jeu.auteur if jeu else '' }}" required>
             </div>
             <div>
                 <button type="submit" class="btn btn-primary">Enregistrer</button>

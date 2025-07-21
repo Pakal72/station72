@@ -79,6 +79,39 @@ def add_jeu(titre: str = Form(...), auteur: str = Form(...)):
             conn.commit()
     return RedirectResponse(url="/jeux", status_code=303)
 
+
+@app.get("/jeux/edit/{jeu_id}")
+def edit_jeu_form(request: Request, jeu_id: int):
+    """Affiche le formulaire d'édition pré-rempli."""
+    with get_conn() as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("SELECT * FROM jeux WHERE id_jeu = %s", (jeu_id,))
+            jeu = cur.fetchone()
+    return templates.TemplateResponse("add_jeu.html", {"request": request, "jeu": jeu})
+
+
+@app.post("/jeux/edit/{jeu_id}")
+def edit_jeu(jeu_id: int, titre: str = Form(...), auteur: str = Form(...)):
+    """Met à jour un jeu existant puis redirige vers la liste."""
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "UPDATE jeux SET titre=%s, auteur=%s WHERE id_jeu=%s",
+                (titre, auteur, jeu_id),
+            )
+            conn.commit()
+    return RedirectResponse(url="/jeux", status_code=303)
+
+
+@app.get("/jeux/delete/{jeu_id}")
+def delete_jeu(jeu_id: int):
+    """Supprime un jeu par son identifiant."""
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM jeux WHERE id_jeu=%s", (jeu_id,))
+            conn.commit()
+    return RedirectResponse(url="/jeux", status_code=303)
+
 if __name__ == "__main__":
     
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
