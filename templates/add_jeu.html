@@ -51,16 +51,22 @@
         <table>
             <thead>
                 <tr>
-                    <th>Ordre</th>
+                    <th>ID</th>
+                    <th>ID jeu</th>
                     <th>Titre</th>
+                    <th>Ordre</th>
+                    <th>Contenu</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for page in pages %}
                 <tr>
-                    <td>{{ page.ordre }}</td>
+                    <td>{{ page.id_page }}</td>
+                    <td>{{ page.id_jeu }}</td>
                     <td>{{ page.titre }}</td>
+                    <td>{{ page.ordre }}</td>
+                    <td>{{ page.contenu }}</td>
                     <td>
                         <a href="/pages/edit/{{ page.id_page }}" class="btn btn-secondary">Modifier</a>
                         <a href="/pages/delete/{{ page.id_page }}" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette page ?');">Supprimer</a>
