@@ -1,5 +1,6 @@
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Form
+from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 import psycopg2
@@ -58,6 +59,25 @@ def list_jeux(request: Request):
             cur.execute("SELECT * FROM jeux ORDER BY id_jeu")
             jeux = cur.fetchall()
     return templates.TemplateResponse("index.html", {"request": request, "jeux": jeux})
+
+
+@app.get("/jeux/add")
+def add_jeu_form(request: Request):
+    """Affiche le formulaire d'ajout d'un jeu."""
+    return templates.TemplateResponse("add_jeu.html", {"request": request})
+
+
+@app.post("/jeux/add")
+def add_jeu(titre: str = Form(...), auteur: str = Form(...)):
+    """Insère un nouveau jeu dans la base puis redirige vers la liste."""
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO jeux (titre, auteur) VALUES (%s, %s)",
+                (titre, auteur),
+            )
+            conn.commit()
+    return RedirectResponse(url="/jeux", status_code=303)
 
 if __name__ == "__main__":
     

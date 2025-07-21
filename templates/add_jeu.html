@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ajouter un jeu</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>➕ Ajouter un jeu</h1>
+        <form action="/jeux/add" method="post">
+            <div>
+                <label for="titre">Titre :</label>
+                <input type="text" id="titre" name="titre" required>
+            </div>
+            <div>
+                <label for="auteur">Auteur :</label>
+                <input type="text" id="auteur" name="auteur" required>
+            </div>
+            <div>
+                <button type="submit" class="btn btn-primary">Enregistrer</button>
+                <a href="/jeux" class="btn btn-secondary">Annuler</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
