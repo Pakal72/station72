@@ -7,6 +7,7 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from dotenv import load_dotenv
 import os
+import uvicorn
 
 load_dotenv()
 
@@ -36,3 +37,7 @@ def list_jeux(request: Request):
             cur.execute("SELECT * FROM jeux ORDER BY id_jeu")
             jeux = cur.fetchall()
     return templates.TemplateResponse("index.html", {"request": request, "jeux": jeux})
+
+if __name__ == "__main__":
+    
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
