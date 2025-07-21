@@ -12,7 +12,12 @@
         <table>
             <thead>
                 <tr>
-                    <th>ID</th><th>Titre</th><th>Auteur</th><th>Actions</th>
+                    <th>ID</th>
+                    <th>Titre</th>
+                    <th>Auteur</th>
+                    <th>Mot de passe</th>
+                    <th>Créé le</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -21,6 +26,8 @@
                     <td>{{ jeu.id_jeu }}</td>
                     <td>{{ jeu.titre }}</td>
                     <td>{{ jeu.auteur }}</td>
+                    <td>{{ jeu.motdepasse }}</td>
+                    <td>{{ jeu.date_creation }}</td>
                     <td>
                         <a href="/jeux/edit/{{ jeu.id_jeu }}" class="btn btn-secondary">Modifier</a>
                         <a href="/jeux/delete/{{ jeu.id_jeu }}" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce jeu ?');">Supprimer</a>
