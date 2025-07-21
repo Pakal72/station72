@@ -68,13 +68,18 @@ def add_jeu_form(request: Request):
 
 
 @app.post("/jeux/add")
-def add_jeu(titre: str = Form(...), auteur: str = Form(...)):
+def add_jeu(
+    titre: str = Form(...),
+    auteur: str = Form(...),
+    synopsis: str = Form(""),
+    motdepasse: str = Form(""),
+):
     """Insère un nouveau jeu dans la base puis redirige vers la liste."""
     with get_conn() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "INSERT INTO jeux (titre, auteur) VALUES (%s, %s)",
-                (titre, auteur),
+                "INSERT INTO jeux (titre, auteur, synopsis, motdepasse) VALUES (%s, %s, %s, %s)",
+                (titre, auteur, synopsis, motdepasse),
             )
             conn.commit()
     return RedirectResponse(url="/jeux", status_code=303)
@@ -91,13 +96,19 @@ def edit_jeu_form(request: Request, jeu_id: int):
 
 
 @app.post("/jeux/edit/{jeu_id}")
-def edit_jeu(jeu_id: int, titre: str = Form(...), auteur: str = Form(...)):
+def edit_jeu(
+    jeu_id: int,
+    titre: str = Form(...),
+    auteur: str = Form(...),
+    synopsis: str = Form(""),
+    motdepasse: str = Form(""),
+):
     """Met à jour un jeu existant puis redirige vers la liste."""
     with get_conn() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "UPDATE jeux SET titre=%s, auteur=%s WHERE id_jeu=%s",
-                (titre, auteur, jeu_id),
+                "UPDATE jeux SET titre=%s, auteur=%s, synopsis=%s, motdepasse=%s WHERE id_jeu=%s",
+                (titre, auteur, synopsis, motdepasse, jeu_id),
             )
             conn.commit()
     return RedirectResponse(url="/jeux", status_code=303)
