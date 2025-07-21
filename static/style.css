@@ -66,3 +66,13 @@ textarea {
 input[readonly] {
     background-color: #e9ecef;
 }
+
+/* Align specific fields on a single row */
+.form-inline {
+    display: flex;
+    gap: 10px;
+}
+
+.form-inline .form-group {
+    flex: 1;
+}
