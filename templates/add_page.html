@@ -54,15 +54,15 @@
             <div class="form-inline">
                 <div class="form-group">
                     <label for="enigme_texte">Énigme :</label>
-                    <input type="text" id="enigme_texte" name="enigme_texte" value="{{ page.enigme_texte if page else '' }}">
+                    <input type="text" id="enigme_texte" name="enigme_texte" value="{{ page.enigme_texte if page else 'Que voulez-vous faire ?' }}">
                 </div>
                 <div class="form-group">
                     <label for="bouton_texte">Texte bouton :</label>
-                    <input type="text" id="bouton_texte" name="bouton_texte" value="{{ page.bouton_texte if page else '' }}">
+                    <input type="text" id="bouton_texte" name="bouton_texte" value="{{ page.bouton_texte if page else 'Entrée' }}">
                 </div>
                 <div class="form-group">
                     <label for="erreur_texte">Message erreur :</label>
-                    <input type="text" id="erreur_texte" name="erreur_texte" value="{{ page.erreur_texte if page else '' }}">
+                    <input type="text" id="erreur_texte" name="erreur_texte" value="{{ page.erreur_texte if page else 'Désolé, je n\'ai pas compris.' }}">
                 </div>
             </div>
             <div class="form-group">
