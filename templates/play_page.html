@@ -35,13 +35,15 @@
     setTimeout(() => { popup.style.display = 'none'; }, 3000);
     </script>
     {% endif %}
-    <form class="input-container" action="/play/{{ jeu.id_jeu }}/{{ page.id_page }}" method="post">
-        {% if page.enigme_texte %}
-        <label for="saisie">{{ page.enigme_texte }}</label>
-        {% endif %}
-        <input class="input-lcars" type="text" id="saisie" name="saisie" autofocus>
-        <button class="btn-lcars" type="submit">{{ page.bouton_texte or 'Envoyer' }}</button>
-    </form>
+    <div class="text-container text-container-bottom">
+        <form class="input-container" action="/play/{{ jeu.id_jeu }}/{{ page.id_page }}" method="post">
+            {% if page.enigme_texte %}
+            <label for="saisie">{{ page.enigme_texte }}</label>
+            {% endif %}
+            <input class="input-lcars" type="text" id="saisie" name="saisie" autofocus>
+            <button class="btn-lcars" type="submit">{{ page.bouton_texte or 'Envoyer' }}</button>
+        </form>
+    </div>
 </div>
 {% if page.delai_fermeture and page.page_suivante %}
 <script>
