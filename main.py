@@ -9,6 +9,8 @@ from psycopg2.pool import SimpleConnectionPool
 from contextlib import contextmanager
 from dotenv import load_dotenv
 import os
+import re
+import unicodedata
 import uvicorn
 
 load_dotenv()
@@ -52,6 +54,24 @@ def get_conn():
     finally:
         pool.putconn(conn)
 
+
+def slugify(text: str) -> str:
+    """Convertit un texte en slug ASCII en minuscules."""
+    text = unicodedata.normalize("NFD", text)
+    text = text.encode("ascii", "ignore").decode("ascii")
+    text = text.lower()
+    text = re.sub(r"[^a-z0-9]+", "-", text)
+    return text.strip("-")
+
+
+def ensure_game_dirs(title: str) -> None:
+    """Crée l'arborescence /static/jeux/<slug>/ si nécessaire."""
+    slug = slugify(title)
+    base = os.path.join("static", "jeux", slug)
+    os.makedirs(base, exist_ok=True)
+    for sub in ("images", "audio", "video", "html"):
+        os.makedirs(os.path.join(base, sub), exist_ok=True)
+
 @app.get("/jeux")
 def list_jeux(request: Request):
     with get_conn() as conn:
@@ -82,6 +102,7 @@ def add_jeu(
                 (titre, auteur, synopsis, motdepasse),
             )
             conn.commit()
+    ensure_game_dirs(titre)
     return RedirectResponse(url="/jeux", status_code=303)
 
 
@@ -125,6 +146,7 @@ def edit_jeu(
                 (titre, auteur, synopsis, motdepasse, jeu_id),
             )
             conn.commit()
+    ensure_game_dirs(titre)
     return RedirectResponse(url="/jeux", status_code=303)
 
 
