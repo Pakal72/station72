@@ -23,10 +23,18 @@
                     <label for="titre">Titre :</label>
                     <input type="text" id="titre" name="titre" value="{{ page.titre if page else '' }}" required>
                 </div>
-                <div class="form-group">
-                    <label for="ordre">Ordre :</label>
-                    <input type="number" id="ordre" name="ordre" value="{{ page.ordre if page else 0 }}" required>
-                </div>
+            <div class="form-group">
+                <label for="ordre">Ordre :</label>
+                <input type="number" id="ordre" name="ordre" value="{{ page.ordre if page else 0 }}" required>
+            </div>
+            <div class="form-group">
+                <label for="delai_fermeture">Délai fermeture (sec) :</label>
+                <input type="number" id="delai_fermeture" name="delai_fermeture" value="{{ page.delai_fermeture if page else 0 }}">
+            </div>
+            <div class="form-group">
+                <label for="page_suivante">Page suivante :</label>
+                <input type="number" id="page_suivante" name="page_suivante" value="{{ page.page_suivante if page else '' }}">
+            </div>
             </div>
             <div class="form-group">
                 <label for="contenu">Contenu :</label>

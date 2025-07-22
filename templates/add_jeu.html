@@ -56,6 +56,8 @@
                     <th>Titre</th>
                     <th>Ordre</th>
                     <th>Contenu</th>
+                    <th>Délai (sec)</th>
+                    <th>Page suivante</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -67,6 +69,8 @@
                     <td>{{ page.titre }}</td>
                     <td>{{ page.ordre }}</td>
                     <td>{{ page.contenu }}</td>
+                    <td>{{ page.delai_fermeture }}</td>
+                    <td>{{ page.page_suivante }}</td>
                     <td>
                         <a href="/pages/edit/{{ page.id_page }}" class="btn btn-secondary">Modifier</a>
                         <a href="/pages/delete/{{ page.id_page }}" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette page ?');">Supprimer</a>
