@@ -65,9 +65,9 @@ def slugify(text: str) -> str:
 
 
 def ensure_game_dirs(title: str) -> None:
-    """Crée l'arborescence /static/Jeux/<slug>/ si nécessaire."""
+    """Crée l'arborescence /static/jeux/<slug>/ si nécessaire."""
     slug = slugify(title)
-    base = os.path.join("static", "Jeux", slug)
+    base = os.path.join("static", "jeux", slug)
     os.makedirs(base, exist_ok=True)
     for sub in ("images", "audio", "video", "html"):
         os.makedirs(os.path.join(base, sub), exist_ok=True)
