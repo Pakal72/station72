@@ -278,10 +278,8 @@ def edit_page(
                     page_id,
                 ),
             )
-            cur.execute("SELECT id_jeu FROM pages WHERE id_page=%s", (page_id,))
-            jeu_id = cur.fetchone()[0]
             conn.commit()
-    return RedirectResponse(url=f"/jeux/edit/{jeu_id}", status_code=303)
+    return RedirectResponse(url=f"/pages/edit/{page_id}", status_code=303)
 
 
 @app.get("/pages/delete/{page_id}")
