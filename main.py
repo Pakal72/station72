@@ -78,7 +78,7 @@ def add_jeu(
     with get_conn() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "INSERT INTO jeux (titre, auteur, synopsis, motdepasse) VALUES (%s, %s, %s, %s)",
+                "INSERT INTO jeux (titre, auteur, synopsis, mot_de_passe) VALUES (%s, %s, %s, %s)",
                 (titre, auteur, synopsis, motdepasse),
             )
             conn.commit()
@@ -115,7 +115,7 @@ def edit_jeu(
     with get_conn() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "UPDATE jeux SET titre=%s, auteur=%s, synopsis=%s, motdepasse=%s WHERE id_jeu=%s",
+                "UPDATE jeux SET titre=%s, auteur=%s, synopsis=%s, mot_de_passe=%s WHERE id_jeu=%s",
                 (titre, auteur, synopsis, motdepasse, jeu_id),
             )
             conn.commit()
