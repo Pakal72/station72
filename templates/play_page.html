@@ -17,7 +17,7 @@
 <div class="container">
     <div>{{ page.contenu | safe }}</div>
     {% if page.musique %}
-    <audio controls autoplay loop>
+    <audio autoplay loop style="display:none;">
         <source src="/static/jeux/{{ slug }}/audio/{{ page.musique }}" type="audio/mpeg">
     </audio>
     {% endif %}
