@@ -93,7 +93,13 @@ def edit_jeu_form(request: Request, jeu_id: int):
             cur.execute("SELECT * FROM jeux WHERE id_jeu = %s", (jeu_id,))
             jeu = cur.fetchone()
             cur.execute(
-                "SELECT * FROM pages WHERE id_jeu = %s ORDER BY ordre",
+                """
+                SELECT p.*, p2.titre AS titre_suivante
+                FROM pages AS p
+                LEFT JOIN pages AS p2 ON p.page_suivante = p2.id_page
+                WHERE p.id_jeu = %s
+                ORDER BY p.ordre
+                """,
                 (jeu_id,),
             )
             pages = cur.fetchall()
