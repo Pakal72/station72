@@ -131,7 +131,9 @@ def jouer_page(request: Request, jeu_id: int, page_id: int, saisie: str = Form("
             message = transition.get("reponse_systeme") or ""
             page = charger_page(conn, transition["id_page_cible"])
         else:
-            message = "Je n'ai pas compris…"
+            # Utilise le message d'erreur spécifique à la page lorsqu'aucune
+            # transition ne correspond
+            message = page.get("erreur_texte") or "Je n'ai pas compris…"
     slug = slugify(jeu["titre"])
     return templates.TemplateResponse(
         "play_page.html",
