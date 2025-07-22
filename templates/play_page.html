@@ -3,11 +3,11 @@
 <head>
     <meta charset="utf-8">
     <title>{{ jeu.titre }}</title>
-    <link rel="stylesheet" href="/static/Jeux/{{ slug }}/style.css">
+    <link rel="stylesheet" href="/static/jeux/{{ slug }}/style.css">
     {% if page.image_fond %}
     <style>
         body {
-            background-image: url('/static/Jeux/{{ jeu.id_jeu }}/{{ page.image_fond }}');
+            background-image: url('/static/jeux/{{ slug }}/images/{{ page.image_fond }}');
             background-size: cover;
         }
     </style>
@@ -18,12 +18,12 @@
     <div>{{ page.contenu | safe }}</div>
     {% if page.musique %}
     <audio controls autoplay loop>
-        <source src="/static/Jeux/{{ jeu.id_jeu }}/{{ page.musique }}" type="audio/mpeg">
+        <source src="/static/jeux/{{ slug }}/audio/{{ page.musique }}" type="audio/mpeg">
     </audio>
     {% endif %}
     {% if page.video %}
     <video controls autoplay>
-        <source src="/static/Jeux/{{ jeu.id_jeu }}/{{ page.video }}" type="video/mp4">
+        <source src="/static/jeux/{{ slug }}/video/{{ page.video }}" type="video/mp4">
     </video>
     {% endif %}
     {% if message %}
