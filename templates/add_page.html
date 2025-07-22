@@ -51,6 +51,20 @@
                     <input type="text" id="image_fond" name="image_fond" value="{{ page.image_fond if page else '' }}">
                 </div>
             </div>
+            <div class="form-inline">
+                <div class="form-group">
+                    <label for="enigme_texte">Énigme :</label>
+                    <input type="text" id="enigme_texte" name="enigme_texte" value="{{ page.enigme_texte if page else '' }}">
+                </div>
+                <div class="form-group">
+                    <label for="bouton_texte">Texte bouton :</label>
+                    <input type="text" id="bouton_texte" name="bouton_texte" value="{{ page.bouton_texte if page else '' }}">
+                </div>
+                <div class="form-group">
+                    <label for="erreur_texte">Message erreur :</label>
+                    <input type="text" id="erreur_texte" name="erreur_texte" value="{{ page.erreur_texte if page else '' }}">
+                </div>
+            </div>
             <div class="form-group">
                 <label for="contenu">Contenu :</label>
                 <textarea id="contenu" name="contenu" rows="12">{{ page.contenu if page else '' }}</textarea>

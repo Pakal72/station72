@@ -4,6 +4,11 @@ ADD COLUMN page_suivante INTEGER DEFAULT NULL COMMENT 'id_page cible en cas de t
 ADD COLUMN musique TEXT DEFAULT NULL COMMENT 'Chemin du fichier musique',
 ADD COLUMN image_fond TEXT DEFAULT NULL COMMENT 'Chemin de l''image de fond';
 
+ALTER TABLE pages
+ADD COLUMN enigme_texte TEXT DEFAULT NULL COMMENT 'Texte de l''énigme',
+ADD COLUMN bouton_texte TEXT DEFAULT NULL COMMENT 'Libellé du bouton',
+ADD COLUMN erreur_texte TEXT DEFAULT NULL COMMENT 'Message en cas d''erreur';
+
 CREATE TABLE transitions (
     id_transition SERIAL PRIMARY KEY,
     id_page_source INTEGER NOT NULL,

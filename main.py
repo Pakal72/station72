@@ -184,13 +184,16 @@ def add_page(
     page_suivante: str = Form(""),
     musique: str = Form(""),
     image_fond: str = Form(""),
+    enigme_texte: str = Form(""),
+    bouton_texte: str = Form(""),
+    erreur_texte: str = Form(""),
     contenu: str = Form(""),
 ):
     with get_conn() as conn:
         with conn.cursor() as cur:
             next_page = int(page_suivante) if page_suivante else None
             cur.execute(
-                "INSERT INTO pages (id_jeu, titre, ordre, delai_fermeture, page_suivante, musique, image_fond, contenu) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+                "INSERT INTO pages (id_jeu, titre, ordre, delai_fermeture, page_suivante, musique, image_fond, enigme_texte, bouton_texte, erreur_texte, contenu) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                 (
                     jeu_id,
                     titre,
@@ -199,6 +202,9 @@ def add_page(
                     next_page,
                     musique,
                     image_fond,
+                    enigme_texte,
+                    bouton_texte,
+                    erreur_texte,
                     contenu,
                 ),
             )
@@ -248,13 +254,16 @@ def edit_page(
     page_suivante: str = Form(""),
     musique: str = Form(""),
     image_fond: str = Form(""),
+    enigme_texte: str = Form(""),
+    bouton_texte: str = Form(""),
+    erreur_texte: str = Form(""),
     contenu: str = Form(""),
 ):
     with get_conn() as conn:
         with conn.cursor() as cur:
             next_page = int(page_suivante) if page_suivante else None
             cur.execute(
-                "UPDATE pages SET titre=%s, ordre=%s, delai_fermeture=%s, page_suivante=%s, musique=%s, image_fond=%s, contenu=%s WHERE id_page=%s",
+                "UPDATE pages SET titre=%s, ordre=%s, delai_fermeture=%s, page_suivante=%s, musique=%s, image_fond=%s, enigme_texte=%s, bouton_texte=%s, erreur_texte=%s, contenu=%s WHERE id_page=%s",
                 (
                     titre,
                     ordre,
@@ -262,6 +271,9 @@ def edit_page(
                     next_page,
                     musique,
                     image_fond,
+                    enigme_texte,
+                    bouton_texte,
+                    erreur_texte,
                     contenu,
                     page_id,
                 ),
@@ -288,12 +300,12 @@ def duplicate_page(page_id: int):
     with get_conn() as conn:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(
-                "SELECT id_jeu, titre, ordre, delai_fermeture, page_suivante, musique, image_fond, contenu FROM pages WHERE id_page=%s",
+                "SELECT id_jeu, titre, ordre, delai_fermeture, page_suivante, musique, image_fond, enigme_texte, bouton_texte, erreur_texte, contenu FROM pages WHERE id_page=%s",
                 (page_id,),
             )
             page = cur.fetchone()
             cur.execute(
-                "INSERT INTO pages (id_jeu, titre, ordre, delai_fermeture, page_suivante, musique, image_fond, contenu) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+                "INSERT INTO pages (id_jeu, titre, ordre, delai_fermeture, page_suivante, musique, image_fond, enigme_texte, bouton_texte, erreur_texte, contenu) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                 (
                     page["id_jeu"],
                     page["titre"],
@@ -302,6 +314,9 @@ def duplicate_page(page_id: int):
                     page["page_suivante"],
                     page["musique"],
                     page["image_fond"],
+                    page["enigme_texte"],
+                    page["bouton_texte"],
+                    page["erreur_texte"],
                     page["contenu"],
                 ),
             )
