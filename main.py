@@ -135,8 +135,15 @@ def delete_jeu(jeu_id: int):
 @app.get("/pages/add")
 def add_page_form(request: Request, jeu_id: int):
     """Formulaire d'ajout d'une page."""
+    with get_conn() as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute(
+                "SELECT id_page, titre FROM pages WHERE id_jeu=%s ORDER BY ordre",
+                (jeu_id,),
+            )
+            pages = cur.fetchall()
     return templates.TemplateResponse(
-        "add_page.html", {"request": request, "jeu_id": jeu_id}
+        "add_page.html", {"request": request, "jeu_id": jeu_id, "pages": pages}
     )
 
 
@@ -178,13 +185,23 @@ def edit_page_form(request: Request, page_id: int):
             cur.execute("SELECT * FROM pages WHERE id_page=%s", (page_id,))
             page = cur.fetchone()
             cur.execute(
+                "SELECT id_page, titre FROM pages WHERE id_jeu=%s ORDER BY ordre",
+                (page["id_jeu"],),
+            )
+            pages = cur.fetchall()
+            cur.execute(
                 "SELECT * FROM transitions WHERE id_page_source=%s ORDER BY priorite, id_transition",
                 (page_id,),
             )
             transitions = cur.fetchall()
     return templates.TemplateResponse(
         "add_page.html",
-        {"request": request, "page": page, "transitions": transitions},
+        {
+            "request": request,
+            "page": page,
+            "transitions": transitions,
+            "pages": pages,
+        },
     )
 
 
