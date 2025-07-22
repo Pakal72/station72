@@ -147,13 +147,24 @@ def add_page(
     ordre: int = Form(...),
     delai_fermeture: int = Form(0),
     page_suivante: int | None = Form(None),
+    musique: str = Form(""),
+    image_fond: str = Form(""),
     contenu: str = Form(""),
 ):
     with get_conn() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "INSERT INTO pages (id_jeu, titre, ordre, delai_fermeture, page_suivante, contenu) VALUES (%s, %s, %s, %s, %s, %s)",
-                (jeu_id, titre, ordre, delai_fermeture, page_suivante, contenu),
+                "INSERT INTO pages (id_jeu, titre, ordre, delai_fermeture, page_suivante, musique, image_fond, contenu) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+                (
+                    jeu_id,
+                    titre,
+                    ordre,
+                    delai_fermeture,
+                    page_suivante,
+                    musique,
+                    image_fond,
+                    contenu,
+                ),
             )
             conn.commit()
     return RedirectResponse(url=f"/jeux/edit/{jeu_id}", status_code=303)
@@ -175,13 +186,24 @@ def edit_page(
     ordre: int = Form(...),
     delai_fermeture: int = Form(0),
     page_suivante: int | None = Form(None),
+    musique: str = Form(""),
+    image_fond: str = Form(""),
     contenu: str = Form(""),
 ):
     with get_conn() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "UPDATE pages SET titre=%s, ordre=%s, delai_fermeture=%s, page_suivante=%s, contenu=%s WHERE id_page=%s",
-                (titre, ordre, delai_fermeture, page_suivante, contenu, page_id),
+                "UPDATE pages SET titre=%s, ordre=%s, delai_fermeture=%s, page_suivante=%s, musique=%s, image_fond=%s, contenu=%s WHERE id_page=%s",
+                (
+                    titre,
+                    ordre,
+                    delai_fermeture,
+                    page_suivante,
+                    musique,
+                    image_fond,
+                    contenu,
+                    page_id,
+                ),
             )
             cur.execute("SELECT id_jeu FROM pages WHERE id_page=%s", (page_id,))
             jeu_id = cur.fetchone()[0]
@@ -205,18 +227,20 @@ def duplicate_page(page_id: int):
     with get_conn() as conn:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(
-                "SELECT id_jeu, titre, ordre, delai_fermeture, page_suivante, contenu FROM pages WHERE id_page=%s",
+                "SELECT id_jeu, titre, ordre, delai_fermeture, page_suivante, musique, image_fond, contenu FROM pages WHERE id_page=%s",
                 (page_id,),
             )
             page = cur.fetchone()
             cur.execute(
-                "INSERT INTO pages (id_jeu, titre, ordre, delai_fermeture, page_suivante, contenu) VALUES (%s, %s, %s, %s, %s, %s)",
+                "INSERT INTO pages (id_jeu, titre, ordre, delai_fermeture, page_suivante, musique, image_fond, contenu) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
                 (
                     page["id_jeu"],
                     page["titre"],
                     page["ordre"],
                     page["delai_fermeture"],
                     page["page_suivante"],
+                    page["musique"],
+                    page["image_fond"],
                     page["contenu"],
                 ),
             )

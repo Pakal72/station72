@@ -35,6 +35,14 @@
                 <label for="page_suivante">Page suivante :</label>
                 <input type="number" id="page_suivante" name="page_suivante" value="{{ page.page_suivante if page else '' }}">
             </div>
+            <div class="form-group">
+                <label for="musique">Musique :</label>
+                <input type="text" id="musique" name="musique" value="{{ page.musique if page else '' }}">
+            </div>
+            <div class="form-group">
+                <label for="image_fond">Image de fond :</label>
+                <input type="text" id="image_fond" name="image_fond" value="{{ page.image_fond if page else '' }}">
+            </div>
             </div>
             <div class="form-group">
                 <label for="contenu">Contenu :</label>
