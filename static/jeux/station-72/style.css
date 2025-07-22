@@ -1,0 +1,82 @@
+
+body {
+    font-family: Arial, sans-serif;
+    background: #f9f9f9;
+    margin: 0;
+    padding: 0;
+}
+.container {
+    width: 80%;
+    margin: auto;
+    padding: 20px;
+}
+h1 {
+    color: #333;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+th, td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+}
+th {
+    background-color: #444;
+    color: white;
+}
+.btn {
+    padding: 6px 12px;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 14px;
+}
+.btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+.btn-secondary {
+    background-color: #ffc107;
+    color: black;
+}
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+form .form-group {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+input[type="text"],
+input[type="password"],
+textarea {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+}
+
+input[readonly] {
+    background-color: #e9ecef;
+}
+
+/* Align specific fields on a single row */
+.form-inline {
+    display: flex;
+    gap: 10px;
+}
+
+.form-inline .form-group {
+    flex: 1;
+}
+
+#ordre {
+    width: 80px;
+}
