@@ -76,3 +76,7 @@ input[readonly] {
 .form-inline .form-group {
     flex: 1;
 }
+
+#ordre {
+    width: 80px;
+}
