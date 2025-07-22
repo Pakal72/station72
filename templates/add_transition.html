@@ -25,7 +25,11 @@
                 </div>
                 <div class="form-group">
                     <label for="id_page_cible">Page cible :</label>
-                    <input type="number" id="id_page_cible" name="id_page_cible" value="{{ transition.id_page_cible if transition else '' }}" required>
+                    <select id="id_page_cible" name="id_page_cible" required>
+                        {% for p in pages %}
+                        <option value="{{ p.id_page }}" {% if transition and p.id_page == transition.id_page_cible %}selected{% endif %}>{{ p.id_page }} - {{ p.titre }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
             </div>
             <div class="form-inline">
