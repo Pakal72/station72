@@ -146,13 +146,14 @@ def add_page(
     titre: str = Form(...),
     ordre: int = Form(...),
     delai_fermeture: int = Form(0),
-    page_suivante: int | None = Form(None),
+    page_suivante: str = Form(""),
     musique: str = Form(""),
     image_fond: str = Form(""),
     contenu: str = Form(""),
 ):
     with get_conn() as conn:
         with conn.cursor() as cur:
+            next_page = int(page_suivante) if page_suivante else None
             cur.execute(
                 "INSERT INTO pages (id_jeu, titre, ordre, delai_fermeture, page_suivante, musique, image_fond, contenu) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
                 (
@@ -160,7 +161,7 @@ def add_page(
                     titre,
                     ordre,
                     delai_fermeture,
-                    page_suivante,
+                    next_page,
                     musique,
                     image_fond,
                     contenu,
@@ -185,20 +186,21 @@ def edit_page(
     titre: str = Form(...),
     ordre: int = Form(...),
     delai_fermeture: int = Form(0),
-    page_suivante: int | None = Form(None),
+    page_suivante: str = Form(""),
     musique: str = Form(""),
     image_fond: str = Form(""),
     contenu: str = Form(""),
 ):
     with get_conn() as conn:
         with conn.cursor() as cur:
+            next_page = int(page_suivante) if page_suivante else None
             cur.execute(
                 "UPDATE pages SET titre=%s, ordre=%s, delai_fermeture=%s, page_suivante=%s, musique=%s, image_fond=%s, contenu=%s WHERE id_page=%s",
                 (
                     titre,
                     ordre,
                     delai_fermeture,
-                    page_suivante,
+                    next_page,
                     musique,
                     image_fond,
                     contenu,
