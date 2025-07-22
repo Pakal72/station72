@@ -177,7 +177,15 @@ def edit_page_form(request: Request, page_id: int):
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute("SELECT * FROM pages WHERE id_page=%s", (page_id,))
             page = cur.fetchone()
-    return templates.TemplateResponse("add_page.html", {"request": request, "page": page})
+            cur.execute(
+                "SELECT * FROM transitions WHERE id_page_source=%s ORDER BY priorite, id_transition",
+                (page_id,),
+            )
+            transitions = cur.fetchall()
+    return templates.TemplateResponse(
+        "add_page.html",
+        {"request": request, "page": page, "transitions": transitions},
+    )
 
 
 @app.post("/pages/edit/{page_id}")
@@ -248,6 +256,152 @@ def duplicate_page(page_id: int):
             )
             conn.commit()
     return RedirectResponse(url=f"/jeux/edit/{page['id_jeu']}", status_code=303)
+
+
+@app.get("/transitions/add")
+def add_transition_form(request: Request, page_id: int):
+    """Formulaire d'ajout d'une transition."""
+    return templates.TemplateResponse(
+        "add_transition.html", {"request": request, "page_id": page_id}
+    )
+
+
+@app.post("/transitions/add")
+def add_transition(
+    id_page_source: int = Form(...),
+    intention: str = Form(...),
+    id_page_cible: int = Form(...),
+    condition_flag: str = Form(""),
+    valeur_condition: str = Form(""),
+    priorite: int = Form(1),
+    reponse_systeme: str = Form(""),
+):
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO transitions (
+                    id_page_source, intention, id_page_cible,
+                    condition_flag, valeur_condition, priorite, reponse_systeme
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """,
+                (
+                    id_page_source,
+                    intention,
+                    id_page_cible,
+                    condition_flag or None,
+                    valeur_condition or None,
+                    priorite,
+                    reponse_systeme,
+                ),
+            )
+            conn.commit()
+    return RedirectResponse(url=f"/pages/edit/{id_page_source}", status_code=303)
+
+
+@app.get("/transitions/edit/{transition_id}")
+def edit_transition_form(request: Request, transition_id: int):
+    with get_conn() as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute(
+                "SELECT * FROM transitions WHERE id_transition=%s",
+                (transition_id,),
+            )
+            transition = cur.fetchone()
+    return templates.TemplateResponse(
+        "add_transition.html", {"request": request, "transition": transition}
+    )
+
+
+@app.post("/transitions/edit/{transition_id}")
+def edit_transition(
+    transition_id: int,
+    id_page_source: int = Form(...),
+    intention: str = Form(...),
+    id_page_cible: int = Form(...),
+    condition_flag: str = Form(""),
+    valeur_condition: str = Form(""),
+    priorite: int = Form(1),
+    reponse_systeme: str = Form(""),
+):
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                UPDATE transitions SET
+                    id_page_source=%s,
+                    intention=%s,
+                    id_page_cible=%s,
+                    condition_flag=%s,
+                    valeur_condition=%s,
+                    priorite=%s,
+                    reponse_systeme=%s
+                WHERE id_transition=%s
+                """,
+                (
+                    id_page_source,
+                    intention,
+                    id_page_cible,
+                    condition_flag or None,
+                    valeur_condition or None,
+                    priorite,
+                    reponse_systeme,
+                    transition_id,
+                ),
+            )
+            conn.commit()
+    return RedirectResponse(url=f"/pages/edit/{id_page_source}", status_code=303)
+
+
+@app.get("/transitions/delete/{transition_id}")
+def delete_transition(transition_id: int):
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT id_page_source FROM transitions WHERE id_transition=%s",
+                (transition_id,),
+            )
+            page_id = cur.fetchone()[0]
+            cur.execute(
+                "DELETE FROM transitions WHERE id_transition=%s",
+                (transition_id,),
+            )
+            conn.commit()
+    return RedirectResponse(url=f"/pages/edit/{page_id}", status_code=303)
+
+
+@app.get("/transitions/duplicate/{transition_id}")
+def duplicate_transition(transition_id: int):
+    with get_conn() as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute(
+                """
+                SELECT id_page_source, intention, id_page_cible,
+                       condition_flag, valeur_condition, priorite, reponse_systeme
+                FROM transitions WHERE id_transition=%s
+                """,
+                (transition_id,),
+            )
+            t = cur.fetchone()
+            cur.execute(
+                """
+                INSERT INTO transitions (
+                    id_page_source, intention, id_page_cible,
+                    condition_flag, valeur_condition, priorite, reponse_systeme
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """,
+                (
+                    t["id_page_source"],
+                    t["intention"],
+                    t["id_page_cible"],
+                    t["condition_flag"],
+                    t["valeur_condition"],
+                    t["priorite"],
+                    t["reponse_systeme"],
+                ),
+            )
+            conn.commit()
+    return RedirectResponse(url=f"/pages/edit/{t['id_page_source']}", status_code=303)
 
 if __name__ == "__main__":
     

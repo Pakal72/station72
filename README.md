@@ -34,3 +34,5 @@ La table `pages` possède maintenant quatre colonnes supplémentaires :
 - `page_suivante` : identifiant de la page vers laquelle effectuer la transition automatique ;
 - `musique` : chemin vers la musique associée à la page ;
 - `image_fond` : image d'arrière-plan de la page.
+
+Une nouvelle table `transitions` décrit les liens entre pages : intention de l'utilisateur, page cible, condition optionnelle et priorité.

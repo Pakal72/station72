@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    {% if transition %}
+    <title>Modifier une transition</title>
+    {% else %}
+    <title>Ajouter une transition</title>
+    {% endif %}
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        {% if transition %}
+        <h1>✏️ Modifier une transition</h1>
+        <form action="/transitions/edit/{{ transition.id_transition }}" method="post">
+        {% else %}
+        <h1>➕ Ajouter une transition</h1>
+        <form action="/transitions/add" method="post">
+        {% endif %}
+            <input type="hidden" name="id_page_source" value="{{ transition.id_page_source if transition else page_id }}">
+            <div class="form-inline">
+                <div class="form-group">
+                    <label for="intention">Intention :</label>
+                    <input type="text" id="intention" name="intention" value="{{ transition.intention if transition else '' }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="id_page_cible">Page cible :</label>
+                    <input type="number" id="id_page_cible" name="id_page_cible" value="{{ transition.id_page_cible if transition else '' }}" required>
+                </div>
+            </div>
+            <div class="form-inline">
+                <div class="form-group">
+                    <label for="condition_flag">Condition :</label>
+                    <input type="text" id="condition_flag" name="condition_flag" value="{{ transition.condition_flag if transition else '' }}">
+                </div>
+                <div class="form-group">
+                    <label for="valeur_condition">Valeur :</label>
+                    <input type="text" id="valeur_condition" name="valeur_condition" value="{{ transition.valeur_condition if transition else '' }}">
+                </div>
+                <div class="form-group">
+                    <label for="priorite">Priorité :</label>
+                    <input type="number" id="priorite" name="priorite" value="{{ transition.priorite if transition else 1 }}">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="reponse_systeme">Réponse système :</label>
+                <textarea id="reponse_systeme" name="reponse_systeme" rows="4">{{ transition.reponse_systeme if transition else '' }}</textarea>
+            </div>
+            <div>
+                <button type="submit" class="btn btn-primary">Enregistrer</button>
+                <a href="/pages/edit/{{ transition.id_page_source if transition else page_id }}" class="btn btn-secondary">Annuler</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
