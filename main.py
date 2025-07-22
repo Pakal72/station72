@@ -278,8 +278,17 @@ def duplicate_page(page_id: int):
 @app.get("/transitions/add")
 def add_transition_form(request: Request, page_id: int):
     """Formulaire d'ajout d'une transition."""
+    with get_conn() as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("SELECT id_jeu FROM pages WHERE id_page=%s", (page_id,))
+            jeu_id = cur.fetchone()["id_jeu"]
+            cur.execute(
+                "SELECT id_page, titre FROM pages WHERE id_jeu=%s ORDER BY ordre",
+                (jeu_id,),
+            )
+            pages = cur.fetchall()
     return templates.TemplateResponse(
-        "add_transition.html", {"request": request, "page_id": page_id}
+        "add_transition.html", {"request": request, "page_id": page_id, "pages": pages}
     )
 
 
@@ -325,8 +334,19 @@ def edit_transition_form(request: Request, transition_id: int):
                 (transition_id,),
             )
             transition = cur.fetchone()
+            cur.execute(
+                "SELECT id_jeu FROM pages WHERE id_page=%s",
+                (transition["id_page_source"],),
+            )
+            jeu_id = cur.fetchone()["id_jeu"]
+            cur.execute(
+                "SELECT id_page, titre FROM pages WHERE id_jeu=%s ORDER BY ordre",
+                (jeu_id,),
+            )
+            pages = cur.fetchall()
     return templates.TemplateResponse(
-        "add_transition.html", {"request": request, "transition": transition}
+        "add_transition.html",
+        {"request": request, "transition": transition, "pages": pages},
     )
 
 
