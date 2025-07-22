@@ -55,6 +55,43 @@
                 <a href="/jeux/edit/{{ page.id_jeu if page else jeu_id }}" class="btn btn-secondary">Annuler</a>
             </div>
         </form>
+
+        {% if page %}
+        <h2>Transitions de la page</h2>
+        <a href="/transitions/add?page_id={{ page.id_page }}" class="btn btn-primary">Ajouter</a>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Intention</th>
+                    <th>Page cible</th>
+                    <th>Condition</th>
+                    <th>Valeur</th>
+                    <th>Priorité</th>
+                    <th>Réponse système</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in transitions %}
+                <tr>
+                    <td>{{ t.id_transition }}</td>
+                    <td>{{ t.intention }}</td>
+                    <td>{{ t.id_page_cible }}</td>
+                    <td>{{ t.condition_flag }}</td>
+                    <td>{{ t.valeur_condition }}</td>
+                    <td>{{ t.priorite }}</td>
+                    <td>{{ t.reponse_systeme }}</td>
+                    <td>
+                        <a href="/transitions/edit/{{ t.id_transition }}" class="btn btn-secondary">Modifier</a>
+                        <a href="/transitions/delete/{{ t.id_transition }}" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette transition ?');">Supprimer</a>
+                        <a href="/transitions/duplicate/{{ t.id_transition }}" class="btn btn-secondary">Dupliquer</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
     </div>
 </body>
 </html>
