@@ -93,3 +93,12 @@ input[readonly] {
     display: none;
     z-index: 1000;
 }
+
+.text-container-bottom {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    text-align: center;
+}
