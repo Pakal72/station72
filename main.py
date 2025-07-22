@@ -196,7 +196,13 @@ def edit_page_form(request: Request, page_id: int):
             )
             pages = cur.fetchall()
             cur.execute(
-                "SELECT * FROM transitions WHERE id_page_source=%s ORDER BY priorite, id_transition",
+                """
+                SELECT t.*, p.titre AS page_cible_titre
+                FROM transitions t
+                JOIN pages p ON t.id_page_cible = p.id_page
+                WHERE t.id_page_source=%s
+                ORDER BY t.priorite, t.id_transition
+                """,
                 (page_id,),
             )
             transitions = cur.fetchall()
