@@ -29,15 +29,13 @@
     {% if message %}
     <p style="color:red">{{ message }}</p>
     {% endif %}
-    <form action="/play/{{ jeu.id_jeu }}/{{ page.id_page }}" method="post">
-        <input type="text" name="saisie" autofocus>
-        <button type="submit">{{ page.bouton_texte or 'Envoyer' }}</button>
+    <form class="input-container" action="/play/{{ jeu.id_jeu }}/{{ page.id_page }}" method="post">
+        {% if page.enigme_texte %}
+        <label for="saisie">{{ page.enigme_texte }}</label>
+        {% endif %}
+        <input class="input-lcars" type="text" id="saisie" name="saisie" autofocus>
+        <button class="btn-lcars" type="submit">{{ page.bouton_texte or 'Envoyer' }}</button>
     </form>
-    {% if page.enigme_texte %}
-    <div style="position: fixed; bottom: 0; width: 100%; text-align: center;">
-        {{ page.enigme_texte }}
-    </div>
-    {% endif %}
 </div>
 {% if page.delai_fermeture and page.page_suivante %}
 <script>

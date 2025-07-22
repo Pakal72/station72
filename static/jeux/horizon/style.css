@@ -13,13 +13,11 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 15px; /* Espacement entre les lments */
+    gap: 15px; /* Espacement entre les éléments */
     width: 100%;
-    max-width: 80%; /* Largeur maximale */
-    position: absolute;
-    bottom: 10%; /* Positionnement  90% du bas de l'cran */
-    left: 50%;
-    transform: translateX(-50%); /* Centre horizontalement */
+    position: fixed;
+    bottom: 0;
+    left: 0;
     padding: 10px;
 }
 
