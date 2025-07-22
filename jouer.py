@@ -5,6 +5,8 @@ from psycopg2.extras import RealDictCursor
 from psycopg2.pool import SimpleConnectionPool
 from contextlib import contextmanager
 from dotenv import load_dotenv
+import re
+import unicodedata
 import os
 import uvicorn
 
@@ -15,6 +17,15 @@ DB_PORT = os.getenv("DB_PORT")
 DB_NAME = os.getenv("DB_NAME")
 DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
+
+
+def slugify(text: str) -> str:
+    """Transforme un texte en slug ASCII en minuscules."""
+    text = unicodedata.normalize("NFD", text)
+    text = text.encode("ascii", "ignore").decode("ascii")
+    text = text.lower()
+    text = re.sub(r"[^a-z0-9]+", "-", text)
+    return text.strip("-")
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -77,6 +88,7 @@ def demarrer_jeu(request: Request, jeu_id: int):
                 {"request": request, "message": "Jeu introuvable"},
                 status_code=404,
             )
+        slug = slugify(jeu["titre"])
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(
                 "SELECT * FROM pages WHERE id_jeu=%s ORDER BY ordre LIMIT 1",
@@ -85,7 +97,7 @@ def demarrer_jeu(request: Request, jeu_id: int):
             page = cur.fetchone()
     return templates.TemplateResponse(
         "play_page.html",
-        {"request": request, "jeu": jeu, "page": page, "message": ""},
+        {"request": request, "jeu": jeu, "page": page, "message": "", "slug": slug},
     )
 
 
@@ -120,9 +132,10 @@ def jouer_page(request: Request, jeu_id: int, page_id: int, saisie: str = Form("
             page = charger_page(conn, transition["id_page_cible"])
         else:
             message = "Je n'ai pas compris…"
+    slug = slugify(jeu["titre"])
     return templates.TemplateResponse(
         "play_page.html",
-        {"request": request, "jeu": jeu, "page": page, "message": message},
+        {"request": request, "jeu": jeu, "page": page, "message": message, "slug": slug},
     )
 
 

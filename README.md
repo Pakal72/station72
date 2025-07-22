@@ -1,6 +1,6 @@
 # Station72
 
-Cette application FastAPI permet de gérer un catalogue de jeux stockés dans une base de données PostgreSQL. Elle fournit une petite interface web (Jinja2) pour afficher la liste des jeux.
+Cette application FastAPI permet de gérer un catalogue de jeux stockés dans une base de données PostgreSQL. Elle fournit une petite interface web (Jinja2) pour afficher la liste des jeux. Chaque jeu dispose maintenant de son propre fichier de style situé dans `/static/Jeux/<slug>/style.css`.
 
 ## Installation
 
