@@ -31,6 +31,7 @@
                     <td>
                         <a href="/jeux/edit/{{ jeu.id_jeu }}" class="btn btn-secondary">Modifier</a>
                         <a href="/jeux/delete/{{ jeu.id_jeu }}" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce jeu ?');">Supprimer</a>
+                        <a href="http://127.0.0.1:8001/play/{{ jeu.id_jeu }}" target="_blank" class="btn btn-primary">Jouer</a>
                     </td>
                 </tr>
                 {% endfor %}
