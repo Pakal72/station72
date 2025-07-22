@@ -33,7 +33,12 @@
                 </div>
                 <div class="form-group">
                     <label for="page_suivante">Page suivante :</label>
-                    <input type="number" id="page_suivante" name="page_suivante" value="{{ page.page_suivante if page else '' }}">
+                    <select id="page_suivante" name="page_suivante">
+                        <option value=""></option>
+                        {% for p in pages %}
+                        <option value="{{ p.id_page }}" {% if page and p.id_page == page.page_suivante %}selected{% endif %}>{{ p.titre }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
             </div>
             <div class="form-inline">
