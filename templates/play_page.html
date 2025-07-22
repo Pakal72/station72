@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{{ jeu.titre }}</title>
+    <link rel="stylesheet" href="/static/style.css">
+    {% if page.image_fond %}
+    <style>
+        body {
+            background-image: url('/static/jeux/{{ jeu.id_jeu }}/{{ page.image_fond }}');
+            background-size: cover;
+        }
+    </style>
+    {% endif %}
+</head>
+<body>
+<div class="container">
+    <div>{{ page.contenu | safe }}</div>
+    {% if page.musique %}
+    <audio controls autoplay loop>
+        <source src="/static/jeux/{{ jeu.id_jeu }}/{{ page.musique }}" type="audio/mpeg">
+    </audio>
+    {% endif %}
+    {% if page.video %}
+    <video controls autoplay>
+        <source src="/static/jeux/{{ jeu.id_jeu }}/{{ page.video }}" type="video/mp4">
+    </video>
+    {% endif %}
+    {% if message %}
+    <p style="color:red">{{ message }}</p>
+    {% endif %}
+    <form action="/play/{{ jeu.id_jeu }}/{{ page.id_page }}" method="post">
+        <input type="text" name="saisie" autofocus>
+        <button type="submit">Envoyer</button>
+    </form>
+</div>
+{% if page.delai_fermeture and page.page_suivante %}
+<script>
+setTimeout(function(){
+    window.location.href = '/play/{{ jeu.id_jeu }}/{{ page.page_suivante }}';
+}, {{ page.delai_fermeture }} * 1000);
+</script>
+{% endif %}
+</body>
+</html>
