@@ -25,3 +25,10 @@ L'application s'appuie sur plusieurs variables à définir dans un fichier `.env
 - `DB_PASSWORD`
 
 Vous trouverez un exemple dans `env.example`.
+
+## Changement de schéma
+
+La table `pages` possède maintenant deux colonnes supplémentaires :
+
+- `delai_fermeture` : temps en secondes avant fermeture automatique d'une page ;
+- `page_suivante` : identifiant de la page vers laquelle effectuer la transition automatique.
