@@ -72,6 +72,9 @@
             <div>
                 <button type="submit" class="btn btn-primary">Enregistrer</button>
                 <a href="/jeux/edit/{{ page.id_jeu if page else jeu_id }}" class="btn btn-secondary">Annuler</a>
+                {% if page %}
+                <a href="http://127.0.0.1:8001/play/{{ page.id_jeu }}/{{ page.id_page }}" class="btn btn-primary" target="_blank">Jouer</a>
+                {% endif %}
             </div>
         </form>
 

@@ -101,6 +101,25 @@ def demarrer_jeu(request: Request, jeu_id: int):
     )
 
 
+@app.get("/play/{jeu_id}/{page_id}")
+def afficher_page(request: Request, jeu_id: int, page_id: int):
+    """Affiche simplement une page sans traitement de saisie."""
+    with get_conn() as conn:
+        jeu = charger_jeu(conn, jeu_id)
+        page = charger_page(conn, page_id)
+        if not page or not jeu:
+            return templates.TemplateResponse(
+                "erreur.html",
+                {"request": request, "message": "Page introuvable"},
+                status_code=404,
+            )
+        slug = slugify(jeu["titre"])
+    return templates.TemplateResponse(
+        "play_page.html",
+        {"request": request, "jeu": jeu, "page": page, "message": "", "slug": slug},
+    )
+
+
 @app.post("/play/{jeu_id}/{page_id}")
 def jouer_page(request: Request, jeu_id: int, page_id: int, saisie: str = Form("")):
     """Traite la saisie du joueur et applique la transition."""
