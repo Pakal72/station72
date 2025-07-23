@@ -305,7 +305,13 @@ def demarrer_jeu(request: Request, jeu_id: int):
                 (jeu_id,),
             )
             page = cur.fetchone()
-    audio = audio_for_message("")
+    
+    # Phrase lue à chaque ouverture de page
+    print("[DEBUG] ROUTE ACTUELLE : /play")
+    message = f"Page {page['ordre']}, {jeu['titre']}"
+    print("[DEBUG] Message à lire :", message)
+    audio = audio_for_message(message)
+
     response = templates.TemplateResponse(
         "play_page.html",
         {"request": request, "jeu": jeu, "page": page, "message": "", "slug": slug, "audio": audio},
@@ -325,14 +331,19 @@ def afficher_page(request: Request, jeu_id: int, page_id: int):
         page = charger_page(conn, page_id)
         if not page or not jeu:
             msg = "Page introuvable"
-            audio = audio_for_message(msg)
             return templates.TemplateResponse(
                 "erreur.html",
                 {"request": request, "message": msg, "audio": audio},
                 status_code=404,
             )
         slug = slugify(jeu["titre"])
-    audio = audio_for_message("")
+
+    # Phrase lue à chaque ouverture de page
+    print("[DEBUG] ROUTE ACTUELLE : /play")
+    message = f"Page {page['ordre']}, {jeu['titre']}"
+    print("[DEBUG] Message à lire :", message)
+    audio = audio_for_message(message)
+    
     response = templates.TemplateResponse(
         "play_page.html",
         {"request": request, "jeu": jeu, "page": page, "message": "", "slug": slug, "audio": audio},
@@ -352,7 +363,6 @@ def jouer_page(request: Request, jeu_id: int, page_id: int, saisie: str = Form("
         page = charger_page(conn, page_id)
         if not page:
             msg = "Page introuvable"
-            audio = audio_for_message(msg)
             return templates.TemplateResponse(
                 "erreur.html",
                 {"request": request, "message": msg, "audio": audio},
@@ -383,4 +393,5 @@ def jouer_page(request: Request, jeu_id: int, page_id: int, saisie: str = Form("
 
 
 if __name__ == "__main__":
+
     uvicorn.run("jouer:app", host="0.0.0.0", port=8001, reload=True)
