@@ -51,11 +51,9 @@
     {% endif %}
 {% if message %}
     <div id="popup" class="popup">{{ message }}</div>
-    {% if audio %}
     <audio autoplay>
         <source src="{{ audio }}" type="audio/wav">
     </audio>
-    {% endif %}
     <script>
     const popup = document.getElementById('popup');
     popup.style.display = 'block';
