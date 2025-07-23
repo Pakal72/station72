@@ -5,6 +5,7 @@ from psycopg2.extras import RealDictCursor
 from psycopg2.pool import SimpleConnectionPool
 from contextlib import contextmanager
 from dotenv import load_dotenv
+from ds9_ia import DS9_IA
 import re
 import unicodedata
 import os
@@ -32,6 +33,9 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 pool: SimpleConnectionPool | None = None
+
+# IA Mistral utilisee en secours
+ia_mistral = DS9_IA("MISTRAL", "mistral-small")
 
 @app.on_event("startup")
 def startup() -> None:
@@ -75,6 +79,31 @@ def charger_jeu(conn, jeu_id: int):
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         cur.execute("SELECT * FROM jeux WHERE id_jeu=%s", (jeu_id,))
         return cur.fetchone()
+
+
+def analyse_reponse_utilisateur(
+    conn, page_id: int, saisie: str
+) -> tuple[dict | None, str]:
+    """Recherche une transition ou interroge l'IA Mistral."""
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute(
+            """
+            SELECT * FROM transitions
+            WHERE id_page_source=%s
+              AND %s ILIKE '%%' || intention || '%%'
+            ORDER BY priorite, id_transition
+            LIMIT 1
+            """,
+            (page_id, saisie),
+        )
+        transition = cur.fetchone()
+    if transition:
+        message = transition.get("reponse_systeme") or ""
+        return transition, message
+
+    # Aucune correspondance : on consulte l'IA Mistral
+    reponse_ia = ia_mistral.repond("", saisie)
+    return None, reponse_ia
 
 
 @app.get("/play/{jeu_id}")
@@ -142,27 +171,10 @@ def jouer_page(request: Request, jeu_id: int, page_id: int, saisie: str = Form("
                 {"request": request, "message": "Page introuvable"},
                 status_code=404,
             )
-        # Recherche de la transition correspondante
-        with conn.cursor(cursor_factory=RealDictCursor) as cur:
-            cur.execute(
-                """
-                SELECT * FROM transitions
-                WHERE id_page_source=%s
-                  AND %s ILIKE '%%' || intention || '%%'
-                ORDER BY priorite, id_transition
-                LIMIT 1
-                """,
-                (page_id, saisie),
-            )
-            transition = cur.fetchone()
+        transition, message = analyse_reponse_utilisateur(conn, page_id, saisie)
         if transition:
             # On affiche la réponse système éventuelle puis on charge la page cible
-            message = transition.get("reponse_systeme") or ""
             page = charger_page(conn, transition["id_page_cible"])
-        else:
-            # Utilise le message d'erreur spécifique à la page lorsqu'aucune
-            # transition ne correspond
-            message = page.get("erreur_texte") or "Je n'ai pas compris…"
     slug = slugify(jeu["titre"])
     response = templates.TemplateResponse(
         "play_page.html",
