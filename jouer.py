@@ -10,6 +10,8 @@ import re
 import unicodedata
 import os
 import uvicorn
+import requests
+import base64
 
 load_dotenv()
 
@@ -37,6 +39,91 @@ pool: SimpleConnectionPool | None = None
 
 # IA Mistral utilisee en secours
 ia_mistral = DS9_IA("MISTRAL", "mistral-small")
+
+# --- Paramètres synthèse vocale -------------------------------------------------
+TTS_SERVERS = [
+    "http://192.168.12.51:8000",
+]
+TTS_DIR = os.path.join("static", "tts")
+os.makedirs(TTS_DIR, exist_ok=True)
+_TTS_SERVER_URL: str | None = None
+
+
+def choisir_serveur_tts() -> str:
+    """Retourne la première URL de serveur XTTS disponible."""
+    global _TTS_SERVER_URL
+    if _TTS_SERVER_URL:
+        return _TTS_SERVER_URL
+    for url in TTS_SERVERS:
+        try:
+            r = requests.get(f"{url}/languages", timeout=2)
+            if r.status_code == 200:
+                _TTS_SERVER_URL = url
+                return url
+        except Exception:
+            continue
+    raise RuntimeError("Aucun serveur XTTS disponible")
+
+
+def tts_genere_audio(message: str, voix: str | None = None) -> str | None:
+    """Génère un fichier audio pour le message donné et renvoie son chemin."""
+    try:
+        server = choisir_serveur_tts()
+    except Exception:
+        return None
+
+    try:
+        resp = requests.get(f"{server}/studio_speakers", timeout=5)
+        resp.raise_for_status()
+        speakers = resp.json()
+        speaker = None
+        if voix and voix in speakers:
+            speaker = voix
+        else:
+            for name in speakers:
+                if "fr" in name.lower():
+                    speaker = name
+                    break
+            if not speaker:
+                speaker = list(speakers.keys())[0]
+        params = speakers[speaker]
+        payload = {
+            "text": message,
+            "language": "fr",
+            "speaker_embedding": params["speaker_embedding"],
+            "gpt_cond_latent": params["gpt_cond_latent"],
+        }
+        rep = requests.post(f"{server}/tts", json=payload, timeout=30)
+        rep.raise_for_status()
+    except Exception:
+        return None
+
+    audio = rep.content
+    if "application/json" in rep.headers.get("Content-Type", ""):
+        try:
+            b64 = rep.json()
+        except Exception:
+            b64 = rep.text
+        b64 = b64.strip().strip('"')
+        try:
+            audio = base64.b64decode(b64)
+        except Exception:
+            return None
+
+    filename = os.path.join(TTS_DIR, "message.wav")
+    try:
+        with open(filename, "wb") as f:
+            f.write(audio)
+        return "/" + filename.replace(os.sep, "/")
+    except Exception:
+        return None
+
+
+def audio_for_message(message: str | None) -> str | None:
+    """Crée un audio pour le message si fourni."""
+    if not message:
+        return None
+    return tts_genere_audio(message)
 
 
 @app.on_event("startup")
@@ -194,9 +281,11 @@ def demarrer_jeu(request: Request, jeu_id: int):
     with get_conn() as conn:
         jeu = charger_jeu(conn, jeu_id)
         if not jeu:
+            msg = "Jeu introuvable"
+            audio = audio_for_message(msg)
             return templates.TemplateResponse(
                 "erreur.html",
-                {"request": request, "message": "Jeu introuvable"},
+                {"request": request, "message": msg, "audio": audio},
                 status_code=404,
             )
         slug = slugify(jeu["titre"])
@@ -206,9 +295,10 @@ def demarrer_jeu(request: Request, jeu_id: int):
                 (jeu_id,),
             )
             page = cur.fetchone()
+    audio = audio_for_message("")
     response = templates.TemplateResponse(
         "play_page.html",
-        {"request": request, "jeu": jeu, "page": page, "message": "", "slug": slug},
+        {"request": request, "jeu": jeu, "page": page, "message": "", "slug": slug, "audio": audio},
     )
     if page.get("delai_fermeture") and page.get("page_suivante"):
         response.headers["Refresh"] = (
@@ -224,15 +314,18 @@ def afficher_page(request: Request, jeu_id: int, page_id: int):
         jeu = charger_jeu(conn, jeu_id)
         page = charger_page(conn, page_id)
         if not page or not jeu:
+            msg = "Page introuvable"
+            audio = audio_for_message(msg)
             return templates.TemplateResponse(
                 "erreur.html",
-                {"request": request, "message": "Page introuvable"},
+                {"request": request, "message": msg, "audio": audio},
                 status_code=404,
             )
         slug = slugify(jeu["titre"])
+    audio = audio_for_message("")
     response = templates.TemplateResponse(
         "play_page.html",
-        {"request": request, "jeu": jeu, "page": page, "message": "", "slug": slug},
+        {"request": request, "jeu": jeu, "page": page, "message": "", "slug": slug, "audio": audio},
     )
     if page.get("delai_fermeture") and page.get("page_suivante"):
         response.headers["Refresh"] = (
@@ -248,9 +341,11 @@ def jouer_page(request: Request, jeu_id: int, page_id: int, saisie: str = Form("
         jeu = charger_jeu(conn, jeu_id)
         page = charger_page(conn, page_id)
         if not page:
+            msg = "Page introuvable"
+            audio = audio_for_message(msg)
             return templates.TemplateResponse(
                 "erreur.html",
-                {"request": request, "message": "Page introuvable"},
+                {"request": request, "message": msg, "audio": audio},
                 status_code=404,
             )
         transition, message = analyse_reponse_utilisateur(conn, page_id, saisie)
@@ -258,6 +353,7 @@ def jouer_page(request: Request, jeu_id: int, page_id: int, saisie: str = Form("
             # On affiche la réponse système éventuelle puis on charge la page cible
             page = charger_page(conn, transition["id_page_cible"])
     slug = slugify(jeu["titre"])
+    audio = audio_for_message(message)
     response = templates.TemplateResponse(
         "play_page.html",
         {
@@ -266,6 +362,7 @@ def jouer_page(request: Request, jeu_id: int, page_id: int, saisie: str = Form("
             "page": page,
             "message": message,
             "slug": slug,
+            "audio": audio,
         },
     )
     if page.get("delai_fermeture") and page.get("page_suivante"):
