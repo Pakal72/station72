@@ -9,6 +9,9 @@ ADD COLUMN enigme_texte TEXT DEFAULT NULL COMMENT 'Texte de l''énigme',
 ADD COLUMN bouton_texte TEXT DEFAULT NULL COMMENT 'Libellé du bouton',
 ADD COLUMN erreur_texte TEXT DEFAULT NULL COMMENT 'Message en cas d''erreur';
 
+ALTER TABLE jeux
+ADD COLUMN ia_nom TEXT DEFAULT NULL COMMENT 'Nom de l\'IA';
+
 CREATE TABLE transitions (
     id_transition SERIAL PRIMARY KEY,
     id_page_source INTEGER NOT NULL,

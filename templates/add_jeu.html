@@ -27,6 +27,10 @@
                     <input type="text" id="auteur" name="auteur" value="{{ jeu.auteur if jeu else '' }}" required>
                 </div>
                 <div class="form-group">
+                    <label for="ia_nom">Nom de l'IA :</label>
+                    <input type="text" id="ia_nom" name="ia_nom" value="{{ jeu.ia_nom if jeu else '' }}">
+                </div>
+                <div class="form-group">
                     <label for="motdepasse">Mot de passe :</label>
                     <input type="password" id="motdepasse" name="motdepasse" value="{{ jeu.motdepasse if jeu else '' }}">
                 </div>
