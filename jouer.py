@@ -95,10 +95,15 @@ def demarrer_jeu(request: Request, jeu_id: int):
                 (jeu_id,),
             )
             page = cur.fetchone()
-    return templates.TemplateResponse(
+    response = templates.TemplateResponse(
         "play_page.html",
         {"request": request, "jeu": jeu, "page": page, "message": "", "slug": slug},
     )
+    if page.get("delai_fermeture") and page.get("page_suivante"):
+        response.headers["Refresh"] = (
+            f"{page['delai_fermeture']}; url=/play/{jeu_id}/{page['page_suivante']}"
+        )
+    return response
 
 
 @app.get("/play/{jeu_id}/{page_id}")
@@ -114,10 +119,15 @@ def afficher_page(request: Request, jeu_id: int, page_id: int):
                 status_code=404,
             )
         slug = slugify(jeu["titre"])
-    return templates.TemplateResponse(
+    response = templates.TemplateResponse(
         "play_page.html",
         {"request": request, "jeu": jeu, "page": page, "message": "", "slug": slug},
     )
+    if page.get("delai_fermeture") and page.get("page_suivante"):
+        response.headers["Refresh"] = (
+            f"{page['delai_fermeture']}; url=/play/{jeu_id}/{page['page_suivante']}"
+        )
+    return response
 
 
 @app.post("/play/{jeu_id}/{page_id}")
@@ -154,10 +164,15 @@ def jouer_page(request: Request, jeu_id: int, page_id: int, saisie: str = Form("
             # transition ne correspond
             message = page.get("erreur_texte") or "Je n'ai pas compris…"
     slug = slugify(jeu["titre"])
-    return templates.TemplateResponse(
+    response = templates.TemplateResponse(
         "play_page.html",
         {"request": request, "jeu": jeu, "page": page, "message": message, "slug": slug},
     )
+    if page.get("delai_fermeture") and page.get("page_suivante"):
+        response.headers["Refresh"] = (
+            f"{page['delai_fermeture']}; url=/play/{jeu_id}/{page['page_suivante']}"
+        )
+    return response
 
 
 if __name__ == "__main__":
