@@ -86,6 +86,12 @@ def charger_jeu(conn, jeu_id: int):
         cur.execute("SELECT * FROM jeux WHERE id_jeu=%s", (jeu_id,))
         return cur.fetchone()
 
+
+@app.get("/", include_in_schema=False)
+def redirect_root() -> RedirectResponse:
+    """Redirige la racine vers la liste des jeux."""
+    return RedirectResponse(url="/jeux")
+
 @app.get("/jeux")
 def list_jeux(request: Request):
     with get_conn() as conn:
