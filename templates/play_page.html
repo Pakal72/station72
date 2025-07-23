@@ -13,8 +13,30 @@
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
     {% endif %}
+    {% if page.delai_fermeture and page.page_suivante %}
+    <style>
+        .timer-circle {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: red;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            z-index: 1000;
+        }
+    </style>
+    {% endif %}
 </head>
 <body>
+{% if page.delai_fermeture and page.page_suivante %}
+<div id="timer" class="timer-circle">{{ page.delai_fermeture }}</div>
+{% endif %}
 <div class="container">
     <div>{{ page.contenu | safe }}</div>
     {% if page.musique %}
@@ -48,9 +70,17 @@
 </div>
 {% if page.delai_fermeture and page.page_suivante %}
 <script>
-setTimeout(function(){
-    window.location.href = '/play/{{ jeu.id_jeu }}/{{ page.page_suivante }}';
-}, {{ page.delai_fermeture }} * 1000);
+let temps = {{ page.delai_fermeture }};
+const timerEl = document.getElementById('timer');
+const interval = setInterval(() => {
+    temps--;
+    if (temps <= 0) {
+        clearInterval(interval);
+        window.location.href = '/play/{{ jeu.id_jeu }}/{{ page.page_suivante }}';
+    } else {
+        timerEl.textContent = temps;
+    }
+}, 1000);
 </script>
 {% endif %}
 </body>
