@@ -3,8 +3,7 @@
 <head>
     <meta charset="utf-8">
     <title>{{ jeu.titre }}</title>
-    <link rel="stylesheet" href="/static/style.css">
-    <link rel="stylesheet" href="/static/jeux/{{ slug }}/style.css">
+    <link rel="stylesheet" href="/static/jeux/{{ slug }}/{{ slug }}.css">
     {% if page.image_fond %}
     <style>
         body {
@@ -12,6 +11,7 @@
             background-size: cover;
         }
     </style>
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
     {% endif %}
 </head>
 <body>
@@ -36,14 +36,15 @@
     </script>
     {% endif %}
     <div class="text-container text-container-bottom">
-        <form class="input-container" action="/play/{{ jeu.id_jeu }}/{{ page.id_page }}" method="post">
+        <form class="input-ligne-unifiee" action="/play/{{ jeu.id_jeu }}/{{ page.id_page }}" method="post">
             {% if page.enigme_texte %}
-            <label for="saisie">{{ page.enigme_texte }}</label>
+                <label for="saisie">{{ page.enigme_texte }}</label>
             {% endif %}
-            <input class="input-lcars" type="text" id="saisie" name="saisie" autofocus>
-            <button class="btn-lcars" type="submit">{{ page.bouton_texte or 'Envoyer' }}</button>
+            <input class="champ-sombre" type="text" id="saisie" name="saisie" autofocus>
+            <button class="btn-go" type="submit">{{ page.bouton_texte or 'GO' }}</button>
         </form>
     </div>
+
 </div>
 {% if page.delai_fermeture and page.page_suivante %}
 <script>
