@@ -112,6 +112,7 @@ def add_jeu_form(request: Request):
 def add_jeu(
     titre: str = Form(...),
     auteur: str = Form(...),
+    ia_nom: str = Form(""),
     synopsis: str = Form(""),
     motdepasse: str = Form(""),
 ):
@@ -119,8 +120,8 @@ def add_jeu(
     with get_conn() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "INSERT INTO jeux (titre, auteur, synopsis, mot_de_passe) VALUES (%s, %s, %s, %s)",
-                (titre, auteur, synopsis, motdepasse),
+                "INSERT INTO jeux (titre, auteur, ia_nom, synopsis, mot_de_passe) VALUES (%s, %s, %s, %s, %s)",
+                (titre, auteur, ia_nom, synopsis, motdepasse),
             )
             conn.commit()
     ensure_game_dirs(titre)
@@ -156,6 +157,7 @@ def edit_jeu(
     jeu_id: int,
     titre: str = Form(...),
     auteur: str = Form(...),
+    ia_nom: str = Form(""),
     synopsis: str = Form(""),
     motdepasse: str = Form(""),
 ):
@@ -163,8 +165,8 @@ def edit_jeu(
     with get_conn() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "UPDATE jeux SET titre=%s, auteur=%s, synopsis=%s, mot_de_passe=%s WHERE id_jeu=%s",
-                (titre, auteur, synopsis, motdepasse, jeu_id),
+                "UPDATE jeux SET titre=%s, auteur=%s, ia_nom=%s, synopsis=%s, mot_de_passe=%s WHERE id_jeu=%s",
+                (titre, auteur, ia_nom, synopsis, motdepasse, jeu_id),
             )
             conn.commit()
     ensure_game_dirs(titre)
