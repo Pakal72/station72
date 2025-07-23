@@ -84,11 +84,13 @@ def charger_jeu(conn, jeu_id: int):
         cur.execute("SELECT * FROM jeux WHERE id_jeu=%s", (jeu_id,))
         return cur.fetchone()
 
-
+#---------------------------------------------
 def analyse_reponse_utilisateur(
     conn, page_id: int, saisie: str
 ) -> tuple[dict | None, str]:
     """Traite la saisie de l'utilisateur en combinant SQL et IA."""
+
+    print(f"[DEBUG] Analyse saisie utilisateur : « {saisie} »")
 
     # Étape 1 – recherche directe dans la base
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
@@ -105,6 +107,7 @@ def analyse_reponse_utilisateur(
         transition = cur.fetchone()
 
     if transition:
+        print(f"[DEBUG] Correspondance SQL trouvée : id_transition = {transition['id_transition']}")
         message = transition.get("reponse_systeme") or ""
         return transition, message
 
@@ -122,6 +125,7 @@ def analyse_reponse_utilisateur(
         possibles = cur.fetchall()
 
     if not possibles:
+        print("[DEBUG] Aucune réponse possible définie pour cette page.")
         return None, "Je n’ai pas compris votre réponse."
 
     liste_reponses = "\n".join(
@@ -129,23 +133,41 @@ def analyse_reponse_utilisateur(
     )
 
     prompt = (
-        "Tu est une IA faite pour décider et analyser la correspondance entre une phrase et un ensemble de réponses possibles. "
-        "Si une correspondance existe, tu dois renvoyer uniquement l’ID de la réponse correspondante, sous forme d’un entier (ex: 2).\n\n"
-        "Exemple :\n"
-        'Reponse utilisateur : "je veux allais sur la porte de gaiche"\n'
-        "Possibilités de réponse :\n"
+        "Tu es une IA spécialisée dans l'analyse de correspondance entre une phrase et une liste de réponses possibles.\n"
+        "Ton rôle est de choisir uniquement l’ID correspondant à la meilleure correspondance sémantique.\n"
+        "Si une réponse correspond clairement, tu dois répondre uniquement par l’ID (exemple : 3).\n"
+        "Si aucune correspondance ne convient, réponds uniquement : 0.\n"
+        "⚠️ Réponds **strictement** par un seul nombre, sans phrase, sans explication, sans ponctuation.\n\n"
+        "Exemple 1 :\n"
+        'Saisie utilisateur : "je veux allais sur la porte de gaiche"\n'
+        "Réponses possibles :\n"
         "1 : droite\n2 : gauche\n3 : arrière\n"
-        "Dans ce cas tu dois répondre : 2\n\n"
-        f'Voici la saisie : "{saisie}"\n'
-        "Voici les réponses possibles :\n"
-        f"{liste_reponses}"
+        "Réponse attendue : 2\n\n"
+        "Exemple 2 :\n"
+        'Saisie utilisateur : "prout"\n'
+        "Réponses possibles :\n"
+        "1 : rouge\n2 : bleu\n3 : jaune\n"
+        "Réponse attendue : 0\n\n"
+        f'Saisie utilisateur : "{saisie}"\n'
+        "Réponses possibles :\n"
+        f"{liste_reponses}\n\n"
+        "Réponds uniquement par un entier :"
     )
 
+
+    print("[DEBUG] Envoi prompt à l’IA Mistral…")
     reponse_id_str = ia_mistral.repond("", prompt)
+    print(prompt)
+    print(f"[DEBUG] Réponse IA brute : {reponse_id_str!r}")
 
     try:
         reponse_id = int(reponse_id_str.strip())
     except Exception:
+        print("[DEBUG] Réponse IA invalide (non entier)")
+        return None, "Je n’ai pas compris votre réponse."
+
+    if reponse_id not in [p["id_transition"] for p in possibles]:
+        print("[DEBUG] ID IA non présent dans les transitions possibles")
         return None, "Je n’ai pas compris votre réponse."
 
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
@@ -156,12 +178,16 @@ def analyse_reponse_utilisateur(
         transition = cur.fetchone()
 
     if transition:
+        print(f"[DEBUG] Transition IA sélectionnée : id_transition = {transition['id_transition']}")
         message = transition.get("reponse_systeme") or ""
         return transition, message
 
+    print("[DEBUG] Aucun résultat trouvé après réponse IA")
     return None, "Je n’ai pas compris votre réponse."
 
 
+
+#---------------------------------------------
 @app.get("/play/{jeu_id}")
 def demarrer_jeu(request: Request, jeu_id: int):
     """Affiche la première page du jeu."""
