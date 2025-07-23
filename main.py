@@ -12,6 +12,7 @@ import os
 import re
 import unicodedata
 import uvicorn
+import subprocess
 
 load_dotenv()
 
@@ -581,5 +582,9 @@ def jouer_page(request: Request, jeu_id: int, page_id: int, saisie: str = Form("
     )
 
 if __name__ == "__main__":
-    
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    jouer_proc = subprocess.Popen(["uv", "run", "jouer.py"])
+    try:
+        uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    finally:
+        jouer_proc.terminate()
+        jouer_proc.wait()
