@@ -50,23 +50,29 @@ _TTS_SERVER_URL: str | None = None
 
 
 def choisir_serveur_tts() -> str:
-    """Retourne la première URL de serveur XTTS disponible."""
     global _TTS_SERVER_URL
     if _TTS_SERVER_URL:
         return _TTS_SERVER_URL
     for url in TTS_SERVERS:
         try:
+            print(f"[DEBUG] Test serveur TTS : {url}/languages")
             r = requests.get(f"{url}/languages", timeout=2)
+            print(f"[DEBUG] Réponse code : {r.status_code}")
             if r.status_code == 200:
                 _TTS_SERVER_URL = url
                 return url
-        except Exception:
+        except Exception as e:
+            print(f"[DEBUG] Erreur serveur TTS : {e}")
             continue
     raise RuntimeError("Aucun serveur XTTS disponible")
 
 
+
 def tts_genere_audio(message: str, voix: str | None = None) -> str | None:
     """Génère un fichier audio pour le message donné et renvoie son chemin."""
+    
+    print(f"[DEBUG] Génération audio pour : {message}")
+
     try:
         server = choisir_serveur_tts()
     except Exception:
@@ -79,6 +85,7 @@ def tts_genere_audio(message: str, voix: str | None = None) -> str | None:
         speaker = None
         if voix and voix in speakers:
             speaker = voix
+            print(f"[DEBUG] Génération speaker pour : {speaker}")
         else:
             for name in speakers:
                 if "fr" in name.lower():
@@ -98,6 +105,7 @@ def tts_genere_audio(message: str, voix: str | None = None) -> str | None:
     except Exception:
         return None
 
+    print("[DEBUG] Écriture fichier audio")
     audio = rep.content
     if "application/json" in rep.headers.get("Content-Type", ""):
         try:
@@ -109,7 +117,7 @@ def tts_genere_audio(message: str, voix: str | None = None) -> str | None:
             audio = base64.b64decode(b64)
         except Exception:
             return None
-
+    print("[DEBUG] 2")
     filename = os.path.join(TTS_DIR, "message.wav")
     try:
         with open(filename, "wb") as f:
@@ -121,8 +129,10 @@ def tts_genere_audio(message: str, voix: str | None = None) -> str | None:
 
 def audio_for_message(message: str | None) -> str | None:
     """Crée un audio pour le message si fourni."""
+    print("[DEBUG] 4")
     if not message:
         return None
+    print("[DEBUG] 5")
     return tts_genere_audio(message)
 
 
