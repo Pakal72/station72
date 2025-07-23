@@ -28,6 +28,7 @@ def slugify(text: str) -> str:
     text = re.sub(r"[^a-z0-9]+", "-", text)
     return text.strip("-")
 
+
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
@@ -36,6 +37,7 @@ pool: SimpleConnectionPool | None = None
 
 # IA Mistral utilisee en secours
 ia_mistral = DS9_IA("MISTRAL", "mistral-small")
+
 
 @app.on_event("startup")
 def startup() -> None:
@@ -51,11 +53,13 @@ def startup() -> None:
         password=DB_PASSWORD,
     )
 
+
 @app.on_event("shutdown")
 def shutdown() -> None:
     """Ferme le pool de connexions."""
     if pool:
         pool.closeall()
+
 
 @contextmanager
 def get_conn():
@@ -84,26 +88,78 @@ def charger_jeu(conn, jeu_id: int):
 def analyse_reponse_utilisateur(
     conn, page_id: int, saisie: str
 ) -> tuple[dict | None, str]:
-    """Recherche une transition ou interroge l'IA Mistral."""
+    """Traite la saisie de l'utilisateur en combinant SQL et IA."""
+
+    # Étape 1 – recherche directe dans la base
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         cur.execute(
             """
             SELECT * FROM transitions
-            WHERE id_page_source=%s
-              AND %s ILIKE '%%' || intention || '%%'
+            WHERE id_page_source = %s
+              AND intention ILIKE '%%' || %s || '%%'
             ORDER BY priorite, id_transition
             LIMIT 1
             """,
             (page_id, saisie),
         )
         transition = cur.fetchone()
+
     if transition:
         message = transition.get("reponse_systeme") or ""
         return transition, message
 
-    # Aucune correspondance : on consulte l'IA Mistral
-    reponse_ia = ia_mistral.repond("", saisie)
-    return None, reponse_ia
+    # Étape 2 – analyse IA Mistral
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute(
+            """
+            SELECT id_transition, intention
+            FROM transitions
+            WHERE id_page_source = %s
+            ORDER BY priorite, id_transition
+            """,
+            (page_id,),
+        )
+        possibles = cur.fetchall()
+
+    if not possibles:
+        return None, "Je n’ai pas compris votre réponse."
+
+    liste_reponses = "\n".join(
+        f"{p['id_transition']} : {p['intention']}" for p in possibles
+    )
+
+    prompt = (
+        "Tu est une IA faite pour décider et analyser la correspondance entre une phrase et un ensemble de réponses possibles. "
+        "Si une correspondance existe, tu dois renvoyer uniquement l’ID de la réponse correspondante, sous forme d’un entier (ex: 2).\n\n"
+        "Exemple :\n"
+        'Reponse utilisateur : "je veux allais sur la porte de gaiche"\n'
+        "Possibilités de réponse :\n"
+        "1 : droite\n2 : gauche\n3 : arrière\n"
+        "Dans ce cas tu dois répondre : 2\n\n"
+        f'Voici la saisie : "{saisie}"\n'
+        "Voici les réponses possibles :\n"
+        f"{liste_reponses}"
+    )
+
+    reponse_id_str = ia_mistral.repond("", prompt)
+
+    try:
+        reponse_id = int(reponse_id_str.strip())
+    except Exception:
+        return None, "Je n’ai pas compris votre réponse."
+
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute(
+            "SELECT * FROM transitions WHERE id_transition = %s",
+            (reponse_id,),
+        )
+        transition = cur.fetchone()
+
+    if transition:
+        message = transition.get("reponse_systeme") or ""
+        return transition, message
+
+    return None, "Je n’ai pas compris votre réponse."
 
 
 @app.get("/play/{jeu_id}")
@@ -178,7 +234,13 @@ def jouer_page(request: Request, jeu_id: int, page_id: int, saisie: str = Form("
     slug = slugify(jeu["titre"])
     response = templates.TemplateResponse(
         "play_page.html",
-        {"request": request, "jeu": jeu, "page": page, "message": message, "slug": slug},
+        {
+            "request": request,
+            "jeu": jeu,
+            "page": page,
+            "message": message,
+            "slug": slug,
+        },
     )
     if page.get("delai_fermeture") and page.get("page_suivante"):
         response.headers["Refresh"] = (
