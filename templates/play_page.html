@@ -51,15 +51,23 @@
     {% endif %}
 {% if message %}
     <div id="popup" class="popup">{{ message }}</div>
-    <audio autoplay>
+    <audio id="msg-audio" autoplay>
         <source src="{{ audio }}" type="audio/wav">
     </audio>
     <script>
     const popup = document.getElementById('popup');
     popup.style.display = 'block';
     setTimeout(() => { popup.style.display = 'none'; }, 3000);
+    const audioEl = document.getElementById('msg-audio');
+    audioEl.addEventListener('ended', () => {
+        fetch('/delete-audio', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ path: '{{ audio }}' })
+        });
+    });
     </script>
-    {% endif %}
+{% endif %}
     <div class="text-container text-container-bottom">
         <form class="input-ligne-unifiee" action="/play/{{ jeu.id_jeu }}/{{ page.id_page }}" method="post">
             {% if page.enigme_texte %}
