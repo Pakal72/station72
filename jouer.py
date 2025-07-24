@@ -6,12 +6,12 @@ from psycopg2.pool import SimpleConnectionPool
 from contextlib import contextmanager
 from dotenv import load_dotenv
 from ds9_ia import DS9_IA
+from ds9_tts import ds9_parle
+from datetime import datetime
 import re
 import unicodedata
 import os
 import uvicorn
-import requests
-import base64
 
 load_dotenv()
 
@@ -41,100 +41,19 @@ pool: SimpleConnectionPool | None = None
 ia_mistral = DS9_IA("MISTRAL", "mistral-small")
 
 # --- Paramètres synthèse vocale -------------------------------------------------
-TTS_SERVERS = [
-    "http://192.168.12.51:8000",
-]
-TTS_DIR = os.path.join("static", "tts")
-os.makedirs(TTS_DIR, exist_ok=True)
-_TTS_SERVER_URL: str | None = None
 
 
-def choisir_serveur_tts() -> str:
-    global _TTS_SERVER_URL
-    if _TTS_SERVER_URL:
-        return _TTS_SERVER_URL
-    for url in TTS_SERVERS:
-        try:
-            print(f"[DEBUG] Test serveur TTS : {url}/languages")
-            r = requests.get(f"{url}/languages", timeout=2)
-            print(f"[DEBUG] Réponse code : {r.status_code}")
-            if r.status_code == 200:
-                _TTS_SERVER_URL = url
-                return url
-        except Exception as e:
-            print(f"[DEBUG] Erreur serveur TTS : {e}")
-            continue
-    raise RuntimeError("Aucun serveur XTTS disponible")
-
-
-
-def tts_genere_audio(message: str, voix: str | None = None) -> str | None:
-    """Génère un fichier audio pour le message donné et renvoie son chemin."""
-    
-    print(f"[DEBUG] Génération audio pour : {message}")
-
-    try:
-        server = choisir_serveur_tts()
-    except Exception:
-        return None
-
-    try:
-        resp = requests.get(f"{server}/studio_speakers", timeout=5)
-        resp.raise_for_status()
-        speakers = resp.json()
-        speaker = None
-        if voix and voix in speakers:
-            speaker = voix
-            print(f"[DEBUG] Génération speaker pour : {speaker}")
-        else:
-            for name in speakers:
-                if "fr" in name.lower():
-                    speaker = name
-                    break
-            if not speaker:
-                speaker = list(speakers.keys())[0]
-        params = speakers[speaker]
-        payload = {
-            "text": message,
-            "language": "fr",
-            "speaker_embedding": params["speaker_embedding"],
-            "gpt_cond_latent": params["gpt_cond_latent"],
-        }
-        rep = requests.post(f"{server}/tts", json=payload, timeout=30)
-        rep.raise_for_status()
-    except Exception:
-        return None
-
-    print("[DEBUG] Écriture fichier audio")
-    audio = rep.content
-    if "application/json" in rep.headers.get("Content-Type", ""):
-        try:
-            b64 = rep.json()
-        except Exception:
-            b64 = rep.text
-        b64 = b64.strip().strip('"')
-        try:
-            audio = base64.b64decode(b64)
-        except Exception:
-            return None
-    print("[DEBUG] 2")
-    filename = os.path.join(TTS_DIR, "message.wav")
-    try:
-        with open(filename, "wb") as f:
-            f.write(audio)
-        return "/" + filename.replace(os.sep, "/")
-    except Exception:
-        return None
-
-
-def audio_for_message(message: str | None) -> str | None:
-    """Crée un audio pour le message si fourni."""
-    print("[DEBUG] 4")
+def audio_for_message(message: str | None, slug: str, page_ordre: int) -> str | None:
+    """Génère un fichier audio en utilisant ds9_parle."""
     if not message:
         return None
-    print("[DEBUG] 5")
-    return tts_genere_audio(message)
-
+    dossier = os.path.join("static", slug, "wav")
+    horo = datetime.now().strftime("%Y%m%d_%H%M%S")
+    nom = f"{slug}_page{page_ordre}_{horo}.wav"
+    ok = ds9_parle(voix="Henriette Usha", texte=message, dossier=dossier, nom_out=nom)
+    if ok:
+        return "/" + os.path.join(dossier, nom).replace(os.sep, "/")
+    return None
 
 @app.on_event("startup")
 def startup() -> None:
@@ -292,7 +211,7 @@ def demarrer_jeu(request: Request, jeu_id: int):
         jeu = charger_jeu(conn, jeu_id)
         if not jeu:
             msg = "Jeu introuvable"
-            audio = audio_for_message(msg)
+            audio = audio_for_message(msg, "erreur", 0)
             return templates.TemplateResponse(
                 "erreur.html",
                 {"request": request, "message": msg, "audio": audio},
@@ -310,7 +229,7 @@ def demarrer_jeu(request: Request, jeu_id: int):
     print("[DEBUG] ROUTE ACTUELLE : /play")
     message = f"Page {page['ordre']}, {jeu['titre']}"
     print("[DEBUG] Message à lire :", message)
-    audio = audio_for_message(message)
+    audio = audio_for_message(message, slug, page["ordre"])
 
     response = templates.TemplateResponse(
         "play_page.html",
@@ -331,6 +250,7 @@ def afficher_page(request: Request, jeu_id: int, page_id: int):
         page = charger_page(conn, page_id)
         if not page or not jeu:
             msg = "Page introuvable"
+            audio = audio_for_message(msg, "erreur", 0)
             return templates.TemplateResponse(
                 "erreur.html",
                 {"request": request, "message": msg, "audio": audio},
@@ -342,7 +262,7 @@ def afficher_page(request: Request, jeu_id: int, page_id: int):
     print("[DEBUG] ROUTE ACTUELLE : /play")
     message = f"Page {page['ordre']}, {jeu['titre']}"
     print("[DEBUG] Message à lire :", message)
-    audio = audio_for_message(message)
+    audio = audio_for_message(message, slug, page["ordre"])
     
     response = templates.TemplateResponse(
         "play_page.html",
@@ -363,6 +283,7 @@ def jouer_page(request: Request, jeu_id: int, page_id: int, saisie: str = Form("
         page = charger_page(conn, page_id)
         if not page:
             msg = "Page introuvable"
+            audio = audio_for_message(msg, "erreur", 0)
             return templates.TemplateResponse(
                 "erreur.html",
                 {"request": request, "message": msg, "audio": audio},
@@ -373,7 +294,7 @@ def jouer_page(request: Request, jeu_id: int, page_id: int, saisie: str = Form("
             # On affiche la réponse système éventuelle puis on charge la page cible
             page = charger_page(conn, transition["id_page_cible"])
     slug = slugify(jeu["titre"])
-    audio = audio_for_message(message)
+    audio = audio_for_message(message, slug, page["ordre"])
     response = templates.TemplateResponse(
         "play_page.html",
         {
