@@ -48,15 +48,17 @@ def audio_for_message(
     slug: str,
     page_ordre: int,
     voix: str | None = None,
+    voix_active: bool = True,
 ) -> str | None:
-    """Génère un fichier audio en utilisant ds9_parle."""
-    if not message:
+    """Génère un fichier audio en utilisant ds9_parle si ``voix_active``."""
+
+    if not message or not voix_active:
         return None
+
     dossier = os.path.join("static", slug, "wav")
     horo = datetime.now().strftime("%Y%m%d_%H%M%S")
     nom = f"{slug}_page{page_ordre}_{horo}.wav"
-    voix_utilisee = voix or "Henriette Usha"
-    ok = ds9_parle(voix=voix_utilisee, texte=message, dossier=dossier, nom_out=nom)
+    ok = ds9_parle(voix=voix or "Henriette Usha", texte=message, dossier=dossier, nom_out=nom)
     if ok:
         return "/" + os.path.join(dossier, nom).replace(os.sep, "/")
     return None
@@ -235,7 +237,13 @@ def demarrer_jeu(request: Request, jeu_id: int):
     print("[DEBUG] ROUTE ACTUELLE : /play")
     message = f"Page {page['ordre']}, {jeu['titre']}"
     print("[DEBUG] Message à lire :", message)
-    audio = audio_for_message(message, slug, page["ordre"], jeu.get("nom_de_la_voie"))
+    audio = audio_for_message(
+        message,
+        slug,
+        page["ordre"],
+        voix=jeu.get("nom_de_la_voie"),
+        voix_active=jeu.get("voie_actif", True),
+    )
 
     response = templates.TemplateResponse(
         "play_page.html",
@@ -268,7 +276,13 @@ def afficher_page(request: Request, jeu_id: int, page_id: int):
     print("[DEBUG] ROUTE ACTUELLE : /play")
     message = f"Page {page['ordre']}, {jeu['titre']}"
     print("[DEBUG] Message à lire :", message)
-    audio = audio_for_message(message, slug, page["ordre"], jeu.get("nom_de_la_voie"))
+    audio = audio_for_message(
+        message,
+        slug,
+        page["ordre"],
+        voix=jeu.get("nom_de_la_voie"),
+        voix_active=jeu.get("voie_actif", True),
+    )
     
     response = templates.TemplateResponse(
         "play_page.html",
@@ -300,7 +314,13 @@ def jouer_page(request: Request, jeu_id: int, page_id: int, saisie: str = Form("
             # On affiche la réponse système éventuelle puis on charge la page cible
             page = charger_page(conn, transition["id_page_cible"])
     slug = slugify(jeu["titre"])
-    audio = audio_for_message(message, slug, page["ordre"], jeu.get("nom_de_la_voie"))
+    audio = audio_for_message(
+        message,
+        slug,
+        page["ordre"],
+        voix=jeu.get("nom_de_la_voie"),
+        voix_active=jeu.get("voie_actif", True),
+    )
     response = templates.TemplateResponse(
         "play_page.html",
         {
