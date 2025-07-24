@@ -520,7 +520,7 @@ def demarrer_jeu(request: Request, jeu_id: int):
         jeu = charger_jeu(conn, jeu_id)
         if not jeu:
             msg = "Jeu introuvable"
-            audio = audio_for_message(msg)
+            audio = audio_for_message(msg, "erreur", 0)
             return templates.TemplateResponse(
                 "erreur.html",
                 {"request": request, "message": msg, "audio": audio},
@@ -537,7 +537,7 @@ def demarrer_jeu(request: Request, jeu_id: int):
     print("[DEBUG] ROUTE ACTUELLE : /play")
     message = f"Page {page['ordre']}, {jeu['titre']}"
     print("[DEBUG] Message à lire :", message)
-    audio = audio_for_message(message)
+    audio = audio_for_message(message, slug, page["ordre"])
 
     response = templates.TemplateResponse(
         "play_page.html",
@@ -558,7 +558,7 @@ def afficher_page(request: Request, jeu_id: int, page_id: int):
         page = charger_page(conn, page_id)
         if not page or not jeu:
             msg = "Page introuvable"
-            audio = audio_for_message(msg)
+            audio = audio_for_message(msg, "erreur", 0)
             return templates.TemplateResponse(
                 "erreur.html",
                 {"request": request, "message": msg, "audio": audio},
@@ -569,7 +569,7 @@ def afficher_page(request: Request, jeu_id: int, page_id: int):
     print("[DEBUG] ROUTE ACTUELLE : /play")
     message = f"Page {page['ordre']}, {jeu['titre']}"
     print("[DEBUG] Message à lire :", message)
-    audio = audio_for_message(message)
+    audio = audio_for_message(message, slug, page["ordre"])
 
     response = templates.TemplateResponse(
         "play_page.html",
@@ -590,7 +590,7 @@ def jouer_page(request: Request, jeu_id: int, page_id: int, saisie: str = Form("
         page = charger_page(conn, page_id)
         if not page:
             msg = "Page introuvable"
-            audio = audio_for_message(msg)
+            audio = audio_for_message(msg, "erreur", 0)
             return templates.TemplateResponse(
                 "erreur.html",
                 {"request": request, "message": msg, "audio": audio},
@@ -601,7 +601,7 @@ def jouer_page(request: Request, jeu_id: int, page_id: int, saisie: str = Form("
             page = charger_page(conn, transition["id_page_cible"])
 
     slug = slugify(jeu["titre"])
-    audio = audio_for_message(message)
+    audio = audio_for_message(message, slug, page["ordre"])
     response = templates.TemplateResponse(
         "play_page.html",
         {
