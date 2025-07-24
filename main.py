@@ -14,6 +14,8 @@ import unicodedata
 import uvicorn
 import subprocess
 
+from jouer import audio_for_message, analyse_reponse_utilisateur
+
 load_dotenv()
 
 DB_HOST = os.getenv("DB_HOST")
@@ -517,9 +519,11 @@ def demarrer_jeu(request: Request, jeu_id: int):
     with get_conn() as conn:
         jeu = charger_jeu(conn, jeu_id)
         if not jeu:
+            msg = "Jeu introuvable"
+            audio = audio_for_message(msg)
             return templates.TemplateResponse(
                 "erreur.html",
-                {"request": request, "message": "Jeu introuvable"},
+                {"request": request, "message": msg, "audio": audio},
                 status_code=404,
             )
         slug = slugify(jeu["titre"])
@@ -529,10 +533,21 @@ def demarrer_jeu(request: Request, jeu_id: int):
                 (jeu_id,),
             )
             page = cur.fetchone()
-    return templates.TemplateResponse(
+
+    print("[DEBUG] ROUTE ACTUELLE : /play")
+    message = f"Page {page['ordre']}, {jeu['titre']}"
+    print("[DEBUG] Message à lire :", message)
+    audio = audio_for_message(message)
+
+    response = templates.TemplateResponse(
         "play_page.html",
-        {"request": request, "jeu": jeu, "page": page, "message": "", "slug": slug},
+        {"request": request, "jeu": jeu, "page": page, "message": "", "slug": slug, "audio": audio},
     )
+    if page.get("delai_fermeture") and page.get("page_suivante"):
+        response.headers["Refresh"] = (
+            f"{page['delai_fermeture']}; url=/play/{jeu_id}/{page['page_suivante']}"
+        )
+    return response
 
 
 @app.get("/play/{jeu_id}/{page_id}")
@@ -542,16 +557,29 @@ def afficher_page(request: Request, jeu_id: int, page_id: int):
         jeu = charger_jeu(conn, jeu_id)
         page = charger_page(conn, page_id)
         if not page or not jeu:
+            msg = "Page introuvable"
+            audio = audio_for_message(msg)
             return templates.TemplateResponse(
                 "erreur.html",
-                {"request": request, "message": "Page introuvable"},
+                {"request": request, "message": msg, "audio": audio},
                 status_code=404,
             )
         slug = slugify(jeu["titre"])
-    return templates.TemplateResponse(
+
+    print("[DEBUG] ROUTE ACTUELLE : /play")
+    message = f"Page {page['ordre']}, {jeu['titre']}"
+    print("[DEBUG] Message à lire :", message)
+    audio = audio_for_message(message)
+
+    response = templates.TemplateResponse(
         "play_page.html",
-        {"request": request, "jeu": jeu, "page": page, "message": "", "slug": slug},
+        {"request": request, "jeu": jeu, "page": page, "message": "", "slug": slug, "audio": audio},
     )
+    if page.get("delai_fermeture") and page.get("page_suivante"):
+        response.headers["Refresh"] = (
+            f"{page['delai_fermeture']}; url=/play/{jeu_id}/{page['page_suivante']}"
+        )
+    return response
 
 
 @app.post("/play/{jeu_id}/{page_id}")
@@ -561,33 +589,35 @@ def jouer_page(request: Request, jeu_id: int, page_id: int, saisie: str = Form("
         jeu = charger_jeu(conn, jeu_id)
         page = charger_page(conn, page_id)
         if not page:
+            msg = "Page introuvable"
+            audio = audio_for_message(msg)
             return templates.TemplateResponse(
                 "erreur.html",
-                {"request": request, "message": "Page introuvable"},
+                {"request": request, "message": msg, "audio": audio},
                 status_code=404,
             )
-        with conn.cursor(cursor_factory=RealDictCursor) as cur:
-            cur.execute(
-                """
-                SELECT * FROM transitions
-                WHERE id_page_source=%s
-                  AND %s ILIKE '%%' || intention || '%%'
-                ORDER BY priorite, id_transition
-                LIMIT 1
-                """,
-                (page_id, saisie),
-            )
-            transition = cur.fetchone()
+        transition, message = analyse_reponse_utilisateur(conn, page_id, saisie)
         if transition:
-            message = transition.get("reponse_systeme") or ""
             page = charger_page(conn, transition["id_page_cible"])
-        else:
-            message = page.get("erreur_texte") or "Je n'ai pas compris…"
+
     slug = slugify(jeu["titre"])
-    return templates.TemplateResponse(
+    audio = audio_for_message(message)
+    response = templates.TemplateResponse(
         "play_page.html",
-        {"request": request, "jeu": jeu, "page": page, "message": message, "slug": slug},
+        {
+            "request": request,
+            "jeu": jeu,
+            "page": page,
+            "message": message,
+            "slug": slug,
+            "audio": audio,
+        },
     )
+    if page.get("delai_fermeture") and page.get("page_suivante"):
+        response.headers["Refresh"] = (
+            f"{page['delai_fermeture']}; url=/play/{jeu_id}/{page['page_suivante']}"
+        )
+    return response
 
 if __name__ == "__main__":
     jouer_proc = subprocess.Popen(["uv", "run", "jouer.py"])
