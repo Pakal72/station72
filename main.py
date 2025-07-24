@@ -118,6 +118,8 @@ def add_jeu(
     titre: str = Form(...),
     auteur: str = Form(...),
     ia_nom: str = Form(""),
+    nom_de_la_voie: str = Form(""),
+    voie_actif: bool = Form(False),
     synopsis: str = Form(""),
     motdepasse: str = Form(""),
 ):
@@ -125,8 +127,8 @@ def add_jeu(
     with get_conn() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "INSERT INTO jeux (titre, auteur, ia_nom, synopsis, mot_de_passe) VALUES (%s, %s, %s, %s, %s)",
-                (titre, auteur, ia_nom, synopsis, motdepasse),
+                "INSERT INTO jeux (titre, auteur, ia_nom, synopsis, mot_de_passe, nom_de_la_voie, voie_actif) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                (titre, auteur, ia_nom, synopsis, motdepasse, nom_de_la_voie or None, voie_actif),
             )
             conn.commit()
     ensure_game_dirs(titre)
@@ -163,6 +165,8 @@ def edit_jeu(
     titre: str = Form(...),
     auteur: str = Form(...),
     ia_nom: str = Form(""),
+    nom_de_la_voie: str = Form(""),
+    voie_actif: bool = Form(False),
     synopsis: str = Form(""),
     motdepasse: str = Form(""),
 ):
@@ -170,8 +174,8 @@ def edit_jeu(
     with get_conn() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "UPDATE jeux SET titre=%s, auteur=%s, ia_nom=%s, synopsis=%s, mot_de_passe=%s WHERE id_jeu=%s",
-                (titre, auteur, ia_nom, synopsis, motdepasse, jeu_id),
+                "UPDATE jeux SET titre=%s, auteur=%s, ia_nom=%s, nom_de_la_voie=%s, voie_actif=%s, synopsis=%s, mot_de_passe=%s WHERE id_jeu=%s",
+                (titre, auteur, ia_nom, nom_de_la_voie or None, voie_actif, synopsis, motdepasse, jeu_id),
             )
             conn.commit()
     ensure_game_dirs(titre)

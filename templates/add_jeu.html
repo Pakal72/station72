@@ -35,6 +35,14 @@
                     <input type="password" id="motdepasse" name="motdepasse" value="{{ jeu.motdepasse if jeu else '' }}">
                 </div>
                 <div class="form-group">
+                    <label for="nom_de_la_voie">Nom de la voie :</label>
+                    <input type="text" id="nom_de_la_voie" name="nom_de_la_voie" value="{{ jeu.nom_de_la_voie if jeu else '' }}">
+                </div>
+                <div class="form-group">
+                    <label for="voie_actif">Voie active :</label>
+                    <input type="checkbox" id="voie_actif" name="voie_actif" {% if jeu and jeu.voie_actif %}checked{% endif %}>
+                </div>
+                <div class="form-group">
                     <label for="date_creation">Date de création :</label>
                     <input type="text" id="date_creation" value="{{ jeu.date_creation if jeu else '' }}" readonly>
                 </div>

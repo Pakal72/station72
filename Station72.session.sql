@@ -12,6 +12,10 @@ ADD COLUMN erreur_texte TEXT DEFAULT NULL COMMENT 'Message en cas d''erreur';
 ALTER TABLE jeux
 ADD COLUMN ia_nom TEXT DEFAULT NULL COMMENT 'Nom de l\'IA';
 
+ALTER TABLE jeux
+ADD COLUMN nom_de_la_voie TEXT DEFAULT NULL COMMENT 'Nom de la voie',
+ADD COLUMN voie_actif BOOLEAN DEFAULT FALSE COMMENT 'Voie active';
+
 CREATE TABLE transitions (
     id_transition SERIAL PRIMARY KEY,
     id_page_source INTEGER NOT NULL,
