@@ -7,6 +7,7 @@ from contextlib import contextmanager
 from dotenv import load_dotenv
 from ds9_ia import DS9_IA
 from ds9_tts import ds9_parle
+import threading
 from datetime import datetime
 import re
 import unicodedata
@@ -43,6 +44,19 @@ ia_mistral = DS9_IA("MISTRAL", "mistral-small")
 # --- Paramètres synthèse vocale -------------------------------------------------
 
 
+def _supprimer_apres_delai(fichier: str, delai: int = 60) -> None:
+    """Planifie la suppression du ``fichier`` après ``delai`` secondes."""
+
+    def _remove() -> None:
+        try:
+            os.remove(fichier)
+        except FileNotFoundError:
+            pass
+
+    timer = threading.Timer(delai, _remove)
+    timer.daemon = True
+    timer.start()
+
 def audio_for_message(
     message: str | None,
     slug: str,
@@ -60,7 +74,9 @@ def audio_for_message(
     nom = f"{slug}_page{page_ordre}_{horo}.wav"
     ok = ds9_parle(voix=voix or "Henriette Usha", texte=message, dossier=dossier, nom_out=nom)
     if ok:
-        return "/" + os.path.join(dossier, nom).replace(os.sep, "/")
+        chemin = os.path.join(dossier, nom)
+        _supprimer_apres_delai(chemin)
+        return "/" + chemin.replace(os.sep, "/")
     return None
 
 @app.on_event("startup")
