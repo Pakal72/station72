@@ -1,4 +1,3 @@
-
 from fastapi import FastAPI, Request, Form
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -30,6 +29,7 @@ templates = Jinja2Templates(directory="templates")
 
 pool: SimpleConnectionPool | None = None
 
+
 @app.on_event("startup")
 def startup() -> None:
     global pool
@@ -43,10 +43,12 @@ def startup() -> None:
         password=DB_PASSWORD,
     )
 
+
 @app.on_event("shutdown")
 def shutdown() -> None:
     if pool:
         pool.closeall()
+
 
 @contextmanager
 def get_conn():
@@ -94,6 +96,7 @@ def charger_jeu(conn, jeu_id: int):
 def redirect_root() -> RedirectResponse:
     """Redirige la racine vers la liste des jeux."""
     return RedirectResponse(url="/jeux")
+
 
 @app.get("/jeux")
 def list_jeux(request: Request):
@@ -520,7 +523,7 @@ def demarrer_jeu(request: Request, jeu_id: int):
         jeu = charger_jeu(conn, jeu_id)
         if not jeu:
             msg = "Jeu introuvable"
-            audio = audio_for_message(msg)
+            audio = audio_for_message(msg, "erreur", 0)
             return templates.TemplateResponse(
                 "erreur.html",
                 {"request": request, "message": msg, "audio": audio},
@@ -537,11 +540,18 @@ def demarrer_jeu(request: Request, jeu_id: int):
     print("[DEBUG] ROUTE ACTUELLE : /play")
     message = f"Page {page['ordre']}, {jeu['titre']}"
     print("[DEBUG] Message à lire :", message)
-    audio = audio_for_message(message)
+    audio = audio_for_message(message, slug, page["ordre"])
 
     response = templates.TemplateResponse(
         "play_page.html",
-        {"request": request, "jeu": jeu, "page": page, "message": "", "slug": slug, "audio": audio},
+        {
+            "request": request,
+            "jeu": jeu,
+            "page": page,
+            "message": "",
+            "slug": slug,
+            "audio": audio,
+        },
     )
     if page.get("delai_fermeture") and page.get("page_suivante"):
         response.headers["Refresh"] = (
@@ -558,7 +568,7 @@ def afficher_page(request: Request, jeu_id: int, page_id: int):
         page = charger_page(conn, page_id)
         if not page or not jeu:
             msg = "Page introuvable"
-            audio = audio_for_message(msg)
+            audio = audio_for_message(msg, "erreur", 0)
             return templates.TemplateResponse(
                 "erreur.html",
                 {"request": request, "message": msg, "audio": audio},
@@ -569,11 +579,18 @@ def afficher_page(request: Request, jeu_id: int, page_id: int):
     print("[DEBUG] ROUTE ACTUELLE : /play")
     message = f"Page {page['ordre']}, {jeu['titre']}"
     print("[DEBUG] Message à lire :", message)
-    audio = audio_for_message(message)
+    audio = audio_for_message(message, slug, page["ordre"])
 
     response = templates.TemplateResponse(
         "play_page.html",
-        {"request": request, "jeu": jeu, "page": page, "message": "", "slug": slug, "audio": audio},
+        {
+            "request": request,
+            "jeu": jeu,
+            "page": page,
+            "message": "",
+            "slug": slug,
+            "audio": audio,
+        },
     )
     if page.get("delai_fermeture") and page.get("page_suivante"):
         response.headers["Refresh"] = (
@@ -590,7 +607,7 @@ def jouer_page(request: Request, jeu_id: int, page_id: int, saisie: str = Form("
         page = charger_page(conn, page_id)
         if not page:
             msg = "Page introuvable"
-            audio = audio_for_message(msg)
+            audio = audio_for_message(msg, "erreur", 0)
             return templates.TemplateResponse(
                 "erreur.html",
                 {"request": request, "message": msg, "audio": audio},
@@ -601,7 +618,7 @@ def jouer_page(request: Request, jeu_id: int, page_id: int, saisie: str = Form("
             page = charger_page(conn, transition["id_page_cible"])
 
     slug = slugify(jeu["titre"])
-    audio = audio_for_message(message)
+    audio = audio_for_message(message, slug, page["ordre"])
     response = templates.TemplateResponse(
         "play_page.html",
         {
@@ -618,6 +635,7 @@ def jouer_page(request: Request, jeu_id: int, page_id: int, saisie: str = Form("
             f"{page['delai_fermeture']}; url=/play/{jeu_id}/{page['page_suivante']}"
         )
     return response
+
 
 if __name__ == "__main__":
     jouer_proc = subprocess.Popen(["uv", "run", "jouer.py"])
