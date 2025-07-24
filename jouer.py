@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, Form
+from fastapi import FastAPI, Request, Form, HTTPException
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from psycopg2.extras import RealDictCursor
@@ -254,6 +254,27 @@ def demarrer_jeu(request: Request, jeu_id: int):
             f"{page['delai_fermeture']}; url=/play/{jeu_id}/{page['page_suivante']}"
         )
     return response
+
+
+@app.post("/delete-audio")
+async def delete_audio(request: Request):
+    """Supprime un fichier audio généré."""
+    data = await request.json()
+    path = data.get("path")
+    if not path:
+        raise HTTPException(status_code=400, detail="Chemin manquant")
+    # Sécurise le chemin pour éviter les traversals
+    if not path.startswith("/static/"):
+        raise HTTPException(status_code=400, detail="Chemin invalide")
+    local_path = os.path.abspath(path.lstrip("/"))
+    static_dir = os.path.abspath("static")
+    if not local_path.startswith(static_dir):
+        raise HTTPException(status_code=400, detail="Chemin invalide")
+    try:
+        os.remove(local_path)
+    except FileNotFoundError:
+        pass
+    return {"status": "ok"}
 
 
 @app.get("/play/{jeu_id}/{page_id}")
