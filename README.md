@@ -57,3 +57,24 @@ Il est également possible d'attendre directement la fonction :
 ```python
 audio_ok = await ds9_parle_async("Henriette Usha", "Bonjour", "static/tmp", "out.wav")
 ```
+
+## Zones interactives sur les pages
+
+Le contenu d'une page peut inclure des boutons ou des zones invisibles afin de
+proposer des actions directes au joueur. Il suffit d'ajouter une balise dans le
+champ **Contenu** lors de l'édition de la page. La classe `zone-action` place
+l'élément en position absolue et change le curseur de la souris. Avec la classe
+complémentaire `zone-invisible`, la zone devient transparente mais reste
+cliquable.
+
+Exemple :
+
+```html
+<button class="zone-action" data-saisie="ouvrir porte" style="top:50px;left:80px;">Porte</button>
+```
+
+Pour rendre la zone totalement invisible :
+
+```html
+<button class="zone-action zone-invisible" data-saisie="inspecter bureau" style="top:120px;left:30px;"></button>
+```

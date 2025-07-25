@@ -4,6 +4,15 @@
     <meta charset="utf-8">
     <title>{{ jeu.titre }}</title>
     <link rel="stylesheet" href="/static/jeux/{{ slug }}/{{ slug }}.css">
+    <style>
+        .zone-action {
+            position: absolute;
+            cursor: pointer;
+        }
+        .zone-invisible {
+            opacity: 0;
+        }
+    </style>
     {% if page.image_fond %}
     <style>
         body {
@@ -109,5 +118,17 @@ const interval = setInterval(() => {
 }, 1000);
 </script>
 {% endif %}
+<script>
+document.querySelectorAll('[data-saisie]').forEach(el => {
+    el.addEventListener('click', () => {
+        const form = document.querySelector('form');
+        const input = document.getElementById('saisie');
+        if (form && input) {
+            input.value = el.dataset.saisie;
+            form.requestSubmit();
+        }
+    });
+});
+</script>
 </body>
 </html>
