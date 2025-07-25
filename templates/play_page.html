@@ -87,6 +87,21 @@
         <source src="/static/jeux/{{ slug }}/video/{{ page.video }}" type="video/mp4">
     </video>
     {% endif %}
+{% if tts_audio %}
+    <audio id="tts-audio" autoplay>
+        <source src="{{ tts_audio }}" type="audio/wav">
+    </audio>
+    <script>
+    const ttsEl = document.getElementById('tts-audio');
+    ttsEl.addEventListener('ended', () => {
+        fetch('/delete-audio', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ path: '{{ tts_audio }}' })
+        });
+    });
+    </script>
+{% endif %}
 {% if message %}
     <div id="popup" class="popup">{{ message }}</div>
     <audio id="msg-audio" autoplay>
