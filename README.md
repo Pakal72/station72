@@ -78,3 +78,9 @@ Pour rendre la zone totalement invisible :
 ```html
 <button class="zone-action zone-invisible" data-saisie="inspecter bureau" style="top:120px;left:30px;"></button>
 ```
+
+## Texte lu automatiquement
+
+Il est possible d'intégrer un marqueur `<!--tts:Votre texte-->` dans le champ **Contenu** d'une page.
+Le texte ainsi indiqué est converti en audio et joué dès l'affichage de la page,
+sans apparaître à l'écran.

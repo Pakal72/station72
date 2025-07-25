@@ -79,6 +79,18 @@ def audio_for_message(
         return "/" + chemin.replace(os.sep, "/")
     return None
 
+
+def extraire_tts(contenu: str) -> tuple[str, str | None]:
+    """Extrait un marqueur ``<!--tts:...-->`` du contenu."""
+
+    motif = re.compile(r"<!--\s*tts:(.*?)-->", re.DOTALL)
+    match = motif.search(contenu)
+    if not match:
+        return contenu, None
+    texte = match.group(1).strip()
+    contenu = motif.sub("", contenu, count=1)
+    return contenu, texte
+
 @app.on_event("startup")
 def startup() -> None:
     """Initialise la connexion à la base de données."""
@@ -248,10 +260,29 @@ def demarrer_jeu(request: Request, jeu_id: int):
                 (jeu_id,),
             )
             page = cur.fetchone()
-    
+
+    page["contenu"], tts_text = extraire_tts(page.get("contenu", ""))
+    tts_audio = audio_for_message(
+        tts_text,
+        slug,
+        page["ordre"],
+        voix=jeu.get("nom_de_la_voie"),
+        voix_active=jeu.get("voie_actif", True),
+    ) if tts_text else None
+
+    audio = None
+
     response = templates.TemplateResponse(
         "play_page.html",
-        {"request": request, "jeu": jeu, "page": page, "message": "", "slug": slug, "audio": audio},
+        {
+            "request": request,
+            "jeu": jeu,
+            "page": page,
+            "message": "",
+            "slug": slug,
+            "audio": audio,
+            "tts_audio": tts_audio,
+        },
     )
     if page.get("delai_fermeture") and page.get("page_suivante"):
         response.headers["Refresh"] = (
@@ -296,6 +327,14 @@ def afficher_page(request: Request, jeu_id: int, page_id: int):
                 status_code=404,
             )
         slug = slugify(jeu["titre"])
+        page["contenu"], tts_text = extraire_tts(page.get("contenu", ""))
+        tts_audio = audio_for_message(
+            tts_text,
+            slug,
+            page["ordre"],
+            voix=jeu.get("nom_de_la_voie"),
+            voix_active=jeu.get("voie_actif", True),
+        ) if tts_text else None
 
     # Phrase lue à chaque ouverture de page
     print("[DEBUG] ROUTE ACTUELLE : /play")
@@ -311,7 +350,15 @@ def afficher_page(request: Request, jeu_id: int, page_id: int):
     
     response = templates.TemplateResponse(
         "play_page.html",
-        {"request": request, "jeu": jeu, "page": page, "message": "", "slug": slug, "audio": audio},
+        {
+            "request": request,
+            "jeu": jeu,
+            "page": page,
+            "message": "",
+            "slug": slug,
+            "audio": audio,
+            "tts_audio": tts_audio,
+        },
     )
     if page.get("delai_fermeture") and page.get("page_suivante"):
         response.headers["Refresh"] = (
@@ -339,6 +386,14 @@ def jouer_page(request: Request, jeu_id: int, page_id: int, saisie: str = Form("
             # On affiche la réponse système éventuelle puis on charge la page cible
             page = charger_page(conn, transition["id_page_cible"])
     slug = slugify(jeu["titre"])
+    page["contenu"], tts_text = extraire_tts(page.get("contenu", ""))
+    tts_audio = audio_for_message(
+        tts_text,
+        slug,
+        page["ordre"],
+        voix=jeu.get("nom_de_la_voie"),
+        voix_active=jeu.get("voie_actif", True),
+    ) if tts_text else None
     audio = audio_for_message(
         message,
         slug,
@@ -355,6 +410,7 @@ def jouer_page(request: Request, jeu_id: int, page_id: int, saisie: str = Form("
             "message": message,
             "slug": slug,
             "audio": audio,
+            "tts_audio": tts_audio,
         },
     )
     if page.get("delai_fermeture") and page.get("page_suivante"):
