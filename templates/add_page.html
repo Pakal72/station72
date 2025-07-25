@@ -50,6 +50,10 @@
                     <label for="image_fond">Image de fond :</label>
                     <input type="text" id="image_fond" name="image_fond" value="{{ page.image_fond if page else '' }}">
                 </div>
+                <div class="form-group">
+                    <label for="est_aide">Page d'aide :</label>
+                    <input type="checkbox" id="est_aide" name="est_aide" {% if page and page.est_aide %}checked{% endif %}>
+                </div>
             </div>
             <div class="form-inline">
                 <div class="form-group">
