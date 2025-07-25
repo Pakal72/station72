@@ -121,6 +121,7 @@
     });
     </script>
 {% endif %}
+{% if not page.est_aide %}
     <div class="text-container text-container-bottom">
         <form class="input-ligne-unifiee" action="/play/{{ jeu.id_jeu }}/{{ page.id_page }}" method="post">
             {% if page.enigme_texte %}
@@ -130,6 +131,7 @@
             <button class="btn-go" type="submit">{{ page.bouton_texte or 'GO' }}</button>
         </form>
     </div>
+{% endif %}
 
 </div>
 {% if page.delai_fermeture and page.page_suivante %}
