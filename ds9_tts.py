@@ -1,5 +1,6 @@
 import argparse
 import requests
+import httpx
 import base64
 import os
 import platform
@@ -128,6 +129,80 @@ def genere_audio(texte: str, voix: str = None):
         print(f"Fichier audio sauvegardé : {FICHIER_OUT}")
     except Exception as file_err:
         print(f"Erreur lors de l'enregistrement du fichier audio : {file_err}")
+
+
+async def genere_audio_async(texte: str, voix: str | None = None) -> None:
+    """Version asynchrone de ``genere_audio`` utilisant ``httpx.AsyncClient``."""
+
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(f"{SERVER_URL}/studio_speakers")
+            response.raise_for_status()
+        except Exception as e:
+            print(f"Erreur lors de la récupération des voix : {e}")
+            return
+
+        speakers = response.json()
+        if not speakers:
+            print("Aucune voix n’est disponible sur le serveur.")
+            return
+
+        selected_speaker_name = None
+        if voix and voix in speakers:
+            selected_speaker_name = voix
+        else:
+            for name in speakers.keys():
+                lower_name = name.lower()
+                if "female" in lower_name and "fr" in lower_name:
+                    selected_speaker_name = name
+                    break
+            if selected_speaker_name is None:
+                for name in speakers.keys():
+                    if "fr" in name.lower():
+                        selected_speaker_name = name
+                        break
+            if selected_speaker_name is None:
+                selected_speaker_name = list(speakers.keys())[0]
+
+        print(f"Voix sélectionnée : {selected_speaker_name}")
+
+        voice_params = speakers[selected_speaker_name]
+        payload = {
+            "text": texte,
+            "language": "fr",
+            "speaker_embedding": voice_params["speaker_embedding"],
+            "gpt_cond_latent": voice_params["gpt_cond_latent"],
+        }
+
+        try:
+            tts_response = await client.post(f"{SERVER_URL}/tts", json=payload)
+            tts_response.raise_for_status()
+        except Exception as e:
+            print(f"Erreur lors de la requête TTS : {e}")
+            return
+
+        audio_bytes = b""
+        content_type = tts_response.headers.get("Content-Type", "")
+        if "application/json" in content_type:
+            try:
+                base64_str = tts_response.json()
+            except ValueError:
+                base64_str = tts_response.text
+            base64_str = base64_str.strip().strip('"')
+            try:
+                audio_bytes = base64.b64decode(base64_str)
+            except Exception as decode_err:
+                print(f"Échec du décodage base64 de l'audio : {decode_err}")
+                return
+        else:
+            audio_bytes = tts_response.content
+
+        try:
+            with open(FICHIER_OUT, "wb") as f:
+                f.write(audio_bytes)
+            print(f"Fichier audio sauvegardé : {FICHIER_OUT}")
+        except Exception as file_err:
+            print(f"Erreur lors de l'enregistrement du fichier audio : {file_err}")
 
 def lire_audio(fichier_audio: str):
     os.startfile(fichier_audio)
@@ -311,6 +386,33 @@ def ds9_parle(voix: str, texte: str, dossier: str, nom_out: str) -> bool:
 
     except Exception as e:
         print(f"❌ Erreur dans ds9_parle : {e}")
+        return False
+
+
+async def ds9_parle_async(voix: str, texte: str, dossier: str, nom_out: str) -> bool:
+    """Version asynchrone de ``ds9_parle``."""
+
+    global SERVER_URL, FICHIER_OUT
+
+    try:
+        chemin_out = os.path.join(dossier, nom_out)
+        if os.path.exists(chemin_out):
+            os.remove(chemin_out)
+
+        os.makedirs(dossier, exist_ok=True)
+
+        if not SERVER_URL:
+            SERVER_URL = choisir_serveur_disponible()
+        print(f"🔈 Serveur XTTS sélectionné dans ds9_parle_async : {SERVER_URL}")
+
+        FICHIER_OUT = chemin_out
+
+        await genere_audio_async(texte, voix)
+
+        return os.path.exists(chemin_out)
+
+    except Exception as e:
+        print(f"❌ Erreur dans ds9_parle_async : {e}")
         return False
 
 
