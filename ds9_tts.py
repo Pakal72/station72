@@ -43,14 +43,20 @@ def slugify(nom):
 
 
 def genere_audio(texte: str, voix: str = None):
-    try:
-        response = requests.get(f"{SERVER_URL}/studio_speakers")
-        response.raise_for_status()
-    except Exception as e:
-        print(f"Erreur lors de la récupération des voix : {e}")
-        exit(1)
+    global xtts_speakers, xtts_url
 
-    speakers = response.json()
+    # Récupération et mise en cache des voix disponibles
+    if not xtts_speakers or xtts_url != SERVER_URL:
+        try:
+            response = requests.get(f"{SERVER_URL}/studio_speakers")
+            response.raise_for_status()
+            xtts_speakers = response.json()
+            xtts_url = SERVER_URL
+        except Exception as e:
+            print(f"Erreur lors de la récupération des voix : {e}")
+            exit(1)
+
+    speakers = xtts_speakers
     if not speakers:
         print("Aucune voix n’est disponible sur le serveur.")
         exit(1)
