@@ -133,15 +133,16 @@ const interval = setInterval(() => {
 </script>
 {% endif %}
 <script>
-document.querySelectorAll('[data-saisie]').forEach(el => {
-    el.addEventListener('click', () => {
-        const form = document.querySelector('form');
-        const input = document.getElementById('saisie');
-        if (form && input) {
-            input.value = el.dataset.saisie;
-            form.requestSubmit();
-        }
-    });
+// Délégation d'événement pour gérer les éléments ajoutés dynamiquement
+document.addEventListener('click', evt => {
+    const cible = evt.target.closest('[data-saisie]');
+    if (!cible) return;
+    const form = document.querySelector('form');
+    const input = document.getElementById('saisie');
+    if (form && input) {
+        input.value = cible.dataset.saisie;
+        form.requestSubmit();
+    }
 });
 </script>
 </body>
