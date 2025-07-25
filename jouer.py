@@ -69,7 +69,7 @@ def audio_for_message(
     if not message or not voix_active:
         return None
 
-    dossier = os.path.join("static", slug, "wav")
+    dossier = os.path.join("static", "jeux", slug, "wav")
     horo = datetime.now().strftime("%Y%m%d_%H%M%S")
     nom = f"{slug}_page{page_ordre}_{horo}.wav"
     ok = ds9_parle(voix=voix or "Henriette Usha", texte=message, dossier=dossier, nom_out=nom)
