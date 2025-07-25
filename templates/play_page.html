@@ -44,20 +44,34 @@
     const pageMusic = "{{ page.musique or '' }}";
     const slug = "{{ slug }}";
     const musicEl = document.getElementById('bg-music');
-    const stored = localStorage.getItem('currentMusic');
+    const storedPath = localStorage.getItem('currentMusic');
+    const storedTime = parseFloat(localStorage.getItem('musicTime') || '0');
+
     if (pageMusic && pageMusic !== 'STOP') {
         const path = `/static/jeux/${slug}/audio/${pageMusic}`;
-        musicEl.src = path;
+        if (path !== storedPath) {
+            musicEl.src = path;
+            localStorage.setItem('currentMusic', path);
+            localStorage.setItem('musicTime', '0');
+        } else {
+            musicEl.src = path;
+            musicEl.currentTime = storedTime;
+        }
         musicEl.play();
-        localStorage.setItem('currentMusic', path);
     } else if (pageMusic === 'STOP') {
         localStorage.removeItem('currentMusic');
+        localStorage.removeItem('musicTime');
         musicEl.pause();
         musicEl.removeAttribute('src');
-    } else if (stored) {
-        musicEl.src = stored;
+    } else if (storedPath) {
+        musicEl.src = storedPath;
+        musicEl.currentTime = storedTime;
         musicEl.play();
     }
+
+    musicEl.addEventListener('timeupdate', () => {
+        localStorage.setItem('musicTime', musicEl.currentTime);
+    });
     </script>
     {% if page.video %}
     <video controls autoplay>
