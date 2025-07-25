@@ -249,18 +249,6 @@ def demarrer_jeu(request: Request, jeu_id: int):
             )
             page = cur.fetchone()
     
-    # Phrase lue à chaque ouverture de page
-    print("[DEBUG] ROUTE ACTUELLE : /play")
-    message = f"Page {page['ordre']}, {jeu['titre']}"
-    print("[DEBUG] Message à lire :", message)
-    audio = audio_for_message(
-        message,
-        slug,
-        page["ordre"],
-        voix=jeu.get("nom_de_la_voie"),
-        voix_active=jeu.get("voie_actif", True),
-    )
-
     response = templates.TemplateResponse(
         "play_page.html",
         {"request": request, "jeu": jeu, "page": page, "message": "", "slug": slug, "audio": audio},
