@@ -39,11 +39,26 @@
 {% endif %}
 <div class="container">
     <div>{{ page.contenu | safe }}</div>
-    {% if page.musique %}
-    <audio autoplay loop style="display:none;">
-        <source src="/static/jeux/{{ slug }}/audio/{{ page.musique }}" type="audio/mpeg">
-    </audio>
-    {% endif %}
+    <audio id="bg-music" loop style="display:none;"></audio>
+    <script>
+    const pageMusic = "{{ page.musique or '' }}";
+    const slug = "{{ slug }}";
+    const musicEl = document.getElementById('bg-music');
+    const stored = localStorage.getItem('currentMusic');
+    if (pageMusic && pageMusic !== 'STOP') {
+        const path = `/static/jeux/${slug}/audio/${pageMusic}`;
+        musicEl.src = path;
+        musicEl.play();
+        localStorage.setItem('currentMusic', path);
+    } else if (pageMusic === 'STOP') {
+        localStorage.removeItem('currentMusic');
+        musicEl.pause();
+        musicEl.removeAttribute('src');
+    } else if (stored) {
+        musicEl.src = stored;
+        musicEl.play();
+    }
+    </script>
     {% if page.video %}
     <video controls autoplay>
         <source src="/static/jeux/{{ slug }}/video/{{ page.video }}" type="video/mp4">
