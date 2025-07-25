@@ -81,6 +81,6 @@ Pour rendre la zone totalement invisible :
 
 ## Texte lu automatiquement
 
-Il est possible d'intégrer un marqueur `<!--tts:Votre texte-->` dans le champ **Contenu** d'une page.
+Il est possible d'intégrer un marqueur `<!--tts:<voice>Nom de la voix</voice><texte>Votre texte</texte>-->` dans le champ **Contenu** d'une page.
 Le texte ainsi indiqué est converti en audio et joué dès l'affichage de la page,
-sans apparaître à l'écran.
+sans apparaître à l'écran. La balise `<voice>` permet de choisir la voix utilisée.

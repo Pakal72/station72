@@ -80,16 +80,33 @@ def audio_for_message(
     return None
 
 
-def extraire_tts(contenu: str) -> tuple[str, str | None]:
-    """Extrait un marqueur ``<!--tts:...-->`` du contenu."""
+def extraire_tts(contenu: str) -> tuple[str, str | None, str | None]:
+    """Extrait un marqueur ``<!--tts:...-->`` et renvoie texte et voix.
+
+    Exemple : ``<!--tts:<voice>Damien</voice><texte>Bonjour</texte>-->``
+    """
 
     motif = re.compile(r"<!--\s*tts:(.*?)-->", re.DOTALL)
     match = motif.search(contenu)
     if not match:
-        return contenu, None
-    texte = match.group(1).strip()
+        return contenu, None, None
+
+    bloc = match.group(1).strip()
+    voix = None
+    texte = None
+
+    voix_match = re.search(r"<voice>(.*?)</voice>", bloc, re.DOTALL)
+    if voix_match:
+        voix = voix_match.group(1).strip()
+
+    texte_match = re.search(r"<texte>(.*?)</texte>", bloc, re.DOTALL)
+    if texte_match:
+        texte = texte_match.group(1).strip()
+    else:
+        texte = bloc
+
     contenu = motif.sub("", contenu, count=1)
-    return contenu, texte
+    return contenu, texte, voix
 
 @app.on_event("startup")
 def startup() -> None:
@@ -261,12 +278,12 @@ def demarrer_jeu(request: Request, jeu_id: int):
             )
             page = cur.fetchone()
 
-    page["contenu"], tts_text = extraire_tts(page.get("contenu", ""))
+    page["contenu"], tts_text, tts_voix = extraire_tts(page.get("contenu", ""))
     tts_audio = audio_for_message(
         tts_text,
         slug,
         page["ordre"],
-        voix=jeu.get("nom_de_la_voie"),
+        voix=tts_voix or jeu.get("nom_de_la_voie"),
         voix_active=jeu.get("voie_actif", True),
     ) if tts_text else None
 
@@ -327,12 +344,12 @@ def afficher_page(request: Request, jeu_id: int, page_id: int):
                 status_code=404,
             )
         slug = slugify(jeu["titre"])
-        page["contenu"], tts_text = extraire_tts(page.get("contenu", ""))
+        page["contenu"], tts_text, tts_voix = extraire_tts(page.get("contenu", ""))
         tts_audio = audio_for_message(
             tts_text,
             slug,
             page["ordre"],
-            voix=jeu.get("nom_de_la_voie"),
+            voix=tts_voix or jeu.get("nom_de_la_voie"),
             voix_active=jeu.get("voie_actif", True),
         ) if tts_text else None
 
@@ -386,12 +403,12 @@ def jouer_page(request: Request, jeu_id: int, page_id: int, saisie: str = Form("
             # On affiche la réponse système éventuelle puis on charge la page cible
             page = charger_page(conn, transition["id_page_cible"])
     slug = slugify(jeu["titre"])
-    page["contenu"], tts_text = extraire_tts(page.get("contenu", ""))
+    page["contenu"], tts_text, tts_voix = extraire_tts(page.get("contenu", ""))
     tts_audio = audio_for_message(
         tts_text,
         slug,
         page["ordre"],
-        voix=jeu.get("nom_de_la_voie"),
+        voix=tts_voix or jeu.get("nom_de_la_voie"),
         voix_active=jeu.get("voie_actif", True),
     ) if tts_text else None
     audio = audio_for_message(
