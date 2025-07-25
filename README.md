@@ -36,3 +36,24 @@ La table `pages` possède maintenant quatre colonnes supplémentaires :
 - `image_fond` : image d'arrière-plan de la page.
 
 Une nouvelle table `transitions` décrit les liens entre pages : intention de l'utilisateur, page cible, condition optionnelle et priorité.
+
+## Synthèse vocale
+
+Le module `ds9_tts` propose désormais une fonction asynchrone `ds9_parle_async`.
+Elle fonctionne comme `ds9_parle` mais utilise `httpx.AsyncClient` pour
+permettre un appel non bloquant dans FastAPI.
+
+```python
+from fastapi import BackgroundTasks
+from ds9_tts import ds9_parle_async
+
+@app.post("/tts")
+async def creer_audio(bg: BackgroundTasks, texte: str):
+    bg.add_task(ds9_parle_async, "Henriette Usha", texte, "static/tmp", "out.wav")
+```
+
+Il est également possible d'attendre directement la fonction :
+
+```python
+audio_ok = await ds9_parle_async("Henriette Usha", "Bonjour", "static/tmp", "out.wav")
+```
