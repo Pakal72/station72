@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Liste des PNJ</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>👤 Gestion des PNJ</h1>
+        <a href="/pnj/add" class="btn btn-primary">➕ Ajouter un PNJ</a>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nom</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in pnjs %}
+                <tr>
+                    <td>{{ p.id }}</td>
+                    <td>{{ p.nom }}</td>
+                    <td>
+                        <a href="/pnj/edit/{{ p.id }}" class="btn btn-secondary">Modifier</a>
+                        <a href="/pnj/delete/{{ p.id }}" class="btn btn-danger" onclick="return confirm('Supprimer ce PNJ ?');">Supprimer</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

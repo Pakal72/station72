@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    {% if enigme %}
+    <title>Modifier une énigme</title>
+    {% else %}
+    <title>Ajouter une énigme</title>
+    {% endif %}
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        {% if enigme %}
+        <h1>✏️ Modifier une énigme</h1>
+        <form action="/enigmes/edit/{{ enigme.id }}" method="post">
+        {% else %}
+        <h1>➕ Ajouter une énigme</h1>
+        <form action="/enigmes/add" method="post">
+        {% endif %}
+            <input type="hidden" name="id_pnj" value="{{ enigme.id_pnj if enigme else pnj_id }}">
+            <div class="form-group">
+                <label for="texte_enigme">Énigme :</label>
+                <textarea id="texte_enigme" name="texte_enigme" rows="4">{{ enigme.texte_enigme if enigme else '' }}</textarea>
+            </div>
+            <div class="form-group">
+                <label for="texte_reponse">Réponse :</label>
+                <input type="text" id="texte_reponse" name="texte_reponse" value="{{ enigme.texte_reponse if enigme else '' }}">
+            </div>
+            <div class="form-group">
+                <label for="textes_indices">Indices :</label>
+                <textarea id="textes_indices" name="textes_indices" rows="4">{{ enigme.textes_indices if enigme else '' }}</textarea>
+            </div>
+            <div>
+                <button type="submit" class="btn btn-primary">Enregistrer</button>
+                <a href="/pnj/edit/{{ enigme.id_pnj if enigme else pnj_id }}" class="btn btn-secondary">Annuler</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

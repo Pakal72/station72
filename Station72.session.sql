@@ -32,3 +32,21 @@ CREATE TABLE transitions (
     CONSTRAINT fk_page_source FOREIGN KEY (id_page_source) REFERENCES pages(id_page),
     CONSTRAINT fk_page_cible FOREIGN KEY (id_page_cible) REFERENCES pages(id_page)
 );
+
+CREATE TABLE pnj (
+    id SERIAL PRIMARY KEY,
+    nom VARCHAR(100) NOT NULL,
+    personae TEXT DEFAULT NULL,
+    prompt TEXT DEFAULT NULL,
+    date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE enigmes (
+    id SERIAL PRIMARY KEY,
+    id_pnj INTEGER NOT NULL,
+    texte_enigme TEXT NOT NULL,
+    texte_reponse TEXT NOT NULL,
+    textes_indices TEXT DEFAULT NULL,
+    date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_pnj FOREIGN KEY (id_pnj) REFERENCES pnj(id) ON DELETE CASCADE
+);
