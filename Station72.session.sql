@@ -35,10 +35,12 @@ CREATE TABLE transitions (
 
 CREATE TABLE pnj (
     id SERIAL PRIMARY KEY,
+    id_jeu INTEGER NOT NULL,
     nom VARCHAR(100) NOT NULL,
     personae TEXT DEFAULT NULL,
     prompt TEXT DEFAULT NULL,
-    date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_pnj_jeu FOREIGN KEY (id_jeu) REFERENCES jeux(id_jeu) ON DELETE CASCADE
 );
 
 CREATE TABLE enigmes (
