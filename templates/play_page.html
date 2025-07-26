@@ -138,6 +138,7 @@
                 <label for="saisie">{{ page.enigme_texte }}</label>
             {% endif %}
             <input class="champ-sombre" type="text" id="saisie" name="saisie" autofocus>
+            <input type="hidden" name="context" value="{{ context|e }}">
             <button class="btn-go" type="submit">{{ page.bouton_texte or 'GO' }}</button>
         </form>
     </div>
