@@ -94,6 +94,10 @@ input[readonly] {
     z-index: 1000;
 }
 
+.popup-bottom {
+    top: 70%;
+}
+
 .text-container-bottom {
     position: absolute;
     bottom: 30px;
