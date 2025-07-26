@@ -195,31 +195,38 @@ def delete_jeu(jeu_id: int):
 # ------------------------ Gestion des PNJ -------------------------
 
 @app.get("/pnj")
-def list_pnj(request: Request):
-    """Affiche la liste des PNJ."""
+def list_pnj(request: Request, jeu_id: int):
+    """Affiche la liste des PNJ pour un jeu."""
     with get_conn() as conn:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
-            cur.execute("SELECT * FROM pnj ORDER BY id")
+            cur.execute("SELECT titre FROM jeux WHERE id_jeu=%s", (jeu_id,))
+            jeu = cur.fetchone()
+            cur.execute("SELECT * FROM pnj WHERE id_jeu=%s ORDER BY id", (jeu_id,))
             pnjs = cur.fetchall()
-    return templates.TemplateResponse("pnj_index.html", {"request": request, "pnjs": pnjs})
+    return templates.TemplateResponse("pnj_index.html", {"request": request, "pnjs": pnjs, "jeu_id": jeu_id, "jeu": jeu})
 
 
 @app.get("/pnj/add")
-def add_pnj_form(request: Request):
+def add_pnj_form(request: Request, jeu_id: int):
     """Formulaire d'ajout d'un PNJ."""
-    return templates.TemplateResponse("add_pnj.html", {"request": request})
+    return templates.TemplateResponse("add_pnj.html", {"request": request, "jeu_id": jeu_id})
 
 
 @app.post("/pnj/add")
-def add_pnj(nom: str = Form(...), personae: str = Form(""), prompt: str = Form("")):
+def add_pnj(
+    jeu_id: int = Form(...),
+    nom: str = Form(...),
+    personae: str = Form(""),
+    prompt: str = Form("")
+):
     with get_conn() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "INSERT INTO pnj (nom, personae, prompt) VALUES (%s, %s, %s)",
-                (nom, personae, prompt),
+                "INSERT INTO pnj (id_jeu, nom, personae, prompt) VALUES (%s, %s, %s, %s)",
+                (jeu_id, nom, personae, prompt),
             )
             conn.commit()
-    return RedirectResponse(url="/pnj", status_code=303)
+    return RedirectResponse(url=f"/pnj?jeu_id={jeu_id}", status_code=303)
 
 
 @app.get("/pnj/edit/{pnj_id}")
@@ -232,34 +239,37 @@ def edit_pnj_form(request: Request, pnj_id: int):
             enigmes = cur.fetchall()
     return templates.TemplateResponse(
         "add_pnj.html",
-        {"request": request, "pnj": pnj, "enigmes": enigmes},
+        {"request": request, "pnj": pnj, "enigmes": enigmes, "jeu_id": pnj["id_jeu"]},
     )
 
 
 @app.post("/pnj/edit/{pnj_id}")
 def edit_pnj(
     pnj_id: int,
+    jeu_id: int = Form(...),
     nom: str = Form(...),
     personae: str = Form(""),
-    prompt: str = Form(""),
+    prompt: str = Form("")
 ):
     with get_conn() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "UPDATE pnj SET nom=%s, personae=%s, prompt=%s WHERE id=%s",
-                (nom, personae, prompt, pnj_id),
+                "UPDATE pnj SET id_jeu=%s, nom=%s, personae=%s, prompt=%s WHERE id=%s",
+                (jeu_id, nom, personae, prompt, pnj_id),
             )
             conn.commit()
-    return RedirectResponse(url="/pnj", status_code=303)
+    return RedirectResponse(url=f"/pnj?jeu_id={jeu_id}", status_code=303)
 
 
 @app.get("/pnj/delete/{pnj_id}")
 def delete_pnj(pnj_id: int):
     with get_conn() as conn:
         with conn.cursor() as cur:
+            cur.execute("SELECT id_jeu FROM pnj WHERE id=%s", (pnj_id,))
+            jeu_id = cur.fetchone()[0]
             cur.execute("DELETE FROM pnj WHERE id=%s", (pnj_id,))
             conn.commit()
-    return RedirectResponse(url="/pnj", status_code=303)
+    return RedirectResponse(url=f"/pnj?jeu_id={jeu_id}", status_code=303)
 
 
 @app.get("/enigmes/add")

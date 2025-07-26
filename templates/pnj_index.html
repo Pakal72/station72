@@ -6,8 +6,8 @@
 </head>
 <body>
     <div class="container">
-        <h1>👤 Gestion des PNJ</h1>
-        <a href="/pnj/add" class="btn btn-primary">➕ Ajouter un PNJ</a>
+        <h1>👤 Gestion des PNJ du jeu {{ jeu.titre if jeu else jeu_id }}</h1>
+        <a href="/pnj/add?jeu_id={{ jeu_id }}" class="btn btn-primary">➕ Ajouter un PNJ</a>
         <table>
             <thead>
                 <tr>

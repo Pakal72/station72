@@ -13,9 +13,11 @@
         {% if pnj %}
         <h1>✏️ Modifier un PNJ</h1>
         <form action="/pnj/edit/{{ pnj.id }}" method="post">
+            <input type="hidden" name="jeu_id" value="{{ pnj.id_jeu }}">
         {% else %}
         <h1>➕ Ajouter un PNJ</h1>
         <form action="/pnj/add" method="post">
+            <input type="hidden" name="jeu_id" value="{{ jeu_id }}">
         {% endif %}
             <div class="form-group">
                 <label for="nom">Nom :</label>
@@ -31,7 +33,7 @@
             </div>
             <div>
                 <button type="submit" class="btn btn-primary">Enregistrer</button>
-                <a href="/pnj" class="btn btn-secondary">Annuler</a>
+                <a href="/pnj?jeu_id={{ pnj.id_jeu if pnj else jeu_id }}" class="btn btn-secondary">Annuler</a>
             </div>
         </form>
 
