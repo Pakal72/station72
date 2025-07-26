@@ -472,11 +472,12 @@ def jouer_page(request: Request, jeu_id: int, page_id: int, saisie: str = Form("
         voix=tts_voix or jeu.get("nom_de_la_voie"),
         voix_active=jeu.get("voie_actif", True),
     ) if tts_text else None
+    pnj_message = False
     if page.get("id_pnj"):
-        pnj = charger_pnj(conn, page["id_pnj"])
-        enigmes = charger_enigmes(conn, page["id_pnj"])
-        prompt_pnj = construire_prompt_pnj(pnj, enigmes)
-        message = ia_mistral.repond("", f"{prompt_pnj}\n{ saisie }")
+        # L'appel à l'IA ne se fait qu'au premier affichage de la page.
+        # On conserve simplement le message issu de l'analyse de saisie ou
+        # d'une éventuelle transition, sans relancer l'IA.
+        pass
     audio = audio_for_message(
         message,
         slug,
@@ -494,7 +495,7 @@ def jouer_page(request: Request, jeu_id: int, page_id: int, saisie: str = Form("
             "slug": slug,
             "audio": audio,
             "tts_audio": tts_audio,
-            "pnj_message": bool(page.get("id_pnj")),
+            "pnj_message": pnj_message,
         },
     )
     if page.get("delai_fermeture") and page.get("page_suivante"):
