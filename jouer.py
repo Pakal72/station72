@@ -153,6 +153,38 @@ def charger_jeu(conn, jeu_id: int):
         cur.execute("SELECT * FROM jeux WHERE id_jeu=%s", (jeu_id,))
         return cur.fetchone()
 
+
+def charger_pnj(conn, pnj_id: int) -> dict | None:
+    """Charge un PNJ par son identifiant."""
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute("SELECT * FROM pnj WHERE id=%s", (pnj_id,))
+        return cur.fetchone()
+
+
+def charger_enigmes(conn, pnj_id: int) -> list[dict]:
+    """Retourne la liste des énigmes d'un PNJ."""
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute(
+            "SELECT texte_enigme, texte_reponse, textes_indices FROM enigmes WHERE id_pnj=%s ORDER BY id",
+            (pnj_id,),
+        )
+        return cur.fetchall()
+
+
+def construire_prompt_pnj(pnj: dict, enigmes: list[dict]) -> str:
+    """Assemble les différentes parties du prompt pour le PNJ."""
+    sections: list[str] = []
+    if pnj.get("personae"):
+        sections.append(pnj["personae"])
+    if pnj.get("prompt"):
+        sections.append(pnj["prompt"])
+    for e in enigmes:
+        indice = e.get("textes_indices") or ""
+        sections.append(
+            f"Énigme : {e['texte_enigme']}\nRéponse : {e['texte_reponse']}\nIndices : {indice}"
+        )
+    return "\n".join(sections)
+
 #---------------------------------------------
 def analyse_reponse_utilisateur(
     conn, page_id: int, saisie: str
@@ -287,7 +319,20 @@ def demarrer_jeu(request: Request, jeu_id: int):
         voix_active=jeu.get("voie_actif", True),
     ) if tts_text else None
 
+    message = ""
     audio = None
+    if page.get("id_pnj"):
+        pnj = charger_pnj(conn, page["id_pnj"])
+        enigmes = charger_enigmes(conn, page["id_pnj"])
+        prompt_pnj = construire_prompt_pnj(pnj, enigmes)
+        message = ia_mistral.repond("", prompt_pnj)
+        audio = audio_for_message(
+            message,
+            slug,
+            page["ordre"],
+            voix=jeu.get("nom_de_la_voie"),
+            voix_active=jeu.get("voie_actif", True),
+        )
 
     response = templates.TemplateResponse(
         "play_page.html",
@@ -295,7 +340,7 @@ def demarrer_jeu(request: Request, jeu_id: int):
             "request": request,
             "jeu": jeu,
             "page": page,
-            "message": "",
+            "message": message,
             "slug": slug,
             "audio": audio,
             "tts_audio": tts_audio,
@@ -353,17 +398,31 @@ def afficher_page(request: Request, jeu_id: int, page_id: int):
             voix_active=jeu.get("voie_actif", True),
         ) if tts_text else None
 
-    # Phrase lue à chaque ouverture de page
-    print("[DEBUG] ROUTE ACTUELLE : /play")
-    message = f"Page {page['ordre']}, {jeu['titre']}"
-    print("[DEBUG] Message à lire :", message)
-    audio = audio_for_message(
-        message,
-        slug,
-        page["ordre"],
-        voix=jeu.get("nom_de_la_voie"),
-        voix_active=jeu.get("voie_actif", True),
-    )
+    message = ""
+    audio = None
+    if page.get("id_pnj"):
+        pnj = charger_pnj(conn, page["id_pnj"])
+        enigmes = charger_enigmes(conn, page["id_pnj"])
+        prompt_pnj = construire_prompt_pnj(pnj, enigmes)
+        message = ia_mistral.repond("", prompt_pnj)
+        audio = audio_for_message(
+            message,
+            slug,
+            page["ordre"],
+            voix=jeu.get("nom_de_la_voie"),
+            voix_active=jeu.get("voie_actif", True),
+        )
+    else:
+        print("[DEBUG] ROUTE ACTUELLE : /play")
+        message = f"Page {page['ordre']}, {jeu['titre']}"
+        print("[DEBUG] Message à lire :", message)
+        audio = audio_for_message(
+            message,
+            slug,
+            page["ordre"],
+            voix=jeu.get("nom_de_la_voie"),
+            voix_active=jeu.get("voie_actif", True),
+        )
     
     response = templates.TemplateResponse(
         "play_page.html",
@@ -371,7 +430,7 @@ def afficher_page(request: Request, jeu_id: int, page_id: int):
             "request": request,
             "jeu": jeu,
             "page": page,
-            "message": "",
+            "message": message,
             "slug": slug,
             "audio": audio,
             "tts_audio": tts_audio,
@@ -411,6 +470,11 @@ def jouer_page(request: Request, jeu_id: int, page_id: int, saisie: str = Form("
         voix=tts_voix or jeu.get("nom_de_la_voie"),
         voix_active=jeu.get("voie_actif", True),
     ) if tts_text else None
+    if page.get("id_pnj"):
+        pnj = charger_pnj(conn, page["id_pnj"])
+        enigmes = charger_enigmes(conn, page["id_pnj"])
+        prompt_pnj = construire_prompt_pnj(pnj, enigmes)
+        message = ia_mistral.repond("", f"{prompt_pnj}\n{ saisie }")
     audio = audio_for_message(
         message,
         slug,
