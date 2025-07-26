@@ -57,6 +57,7 @@ def _supprimer_apres_delai(fichier: str, delai: int = 60) -> None:
     timer.daemon = True
     timer.start()
 
+
 def audio_for_message(
     message: str | None,
     slug: str,
@@ -72,7 +73,9 @@ def audio_for_message(
     dossier = os.path.join("static", "jeux", slug, "wav")
     horo = datetime.now().strftime("%Y%m%d_%H%M%S")
     nom = f"{slug}_page{page_ordre}_{horo}.wav"
-    ok = ds9_parle(voix=voix or "Henriette Usha", texte=message, dossier=dossier, nom_out=nom)
+    ok = ds9_parle(
+        voix=voix or "Henriette Usha", texte=message, dossier=dossier, nom_out=nom
+    )
     if ok:
         chemin = os.path.join(dossier, nom)
         _supprimer_apres_delai(chemin)
@@ -107,6 +110,7 @@ def extraire_tts(contenu: str) -> tuple[str, str | None, str | None]:
 
     contenu = motif.sub("", contenu, count=1)
     return contenu, texte, voix
+
 
 @app.on_event("startup")
 def startup() -> None:
@@ -185,7 +189,8 @@ def construire_prompt_pnj(pnj: dict, enigmes: list[dict]) -> str:
         )
     return "\n".join(sections)
 
-#---------------------------------------------
+
+# ---------------------------------------------
 def analyse_reponse_utilisateur(
     conn, page_id: int, saisie: str
 ) -> tuple[dict | None, str]:
@@ -208,7 +213,9 @@ def analyse_reponse_utilisateur(
         transition = cur.fetchone()
 
     if transition:
-        print(f"[DEBUG] Correspondance SQL trouvée : id_transition = {transition['id_transition']}")
+        print(
+            f"[DEBUG] Correspondance SQL trouvée : id_transition = {transition['id_transition']}"
+        )
         message = transition.get("reponse_systeme") or ""
         return transition, message
 
@@ -255,7 +262,6 @@ def analyse_reponse_utilisateur(
         "Réponds uniquement par un entier :"
     )
 
-
     print("[DEBUG] Envoi prompt à l’IA Mistral…")
     reponse_id_str = ia_mistral.repond("", prompt)
     print(prompt)
@@ -279,7 +285,9 @@ def analyse_reponse_utilisateur(
         transition = cur.fetchone()
 
     if transition:
-        print(f"[DEBUG] Transition IA sélectionnée : id_transition = {transition['id_transition']}")
+        print(
+            f"[DEBUG] Transition IA sélectionnée : id_transition = {transition['id_transition']}"
+        )
         message = transition.get("reponse_systeme") or ""
         return transition, message
 
@@ -287,8 +295,7 @@ def analyse_reponse_utilisateur(
     return None, "Je n’ai pas compris votre réponse."
 
 
-
-#---------------------------------------------
+# ---------------------------------------------
 @app.get("/play/{jeu_id}")
 def demarrer_jeu(request: Request, jeu_id: int):
     """Affiche la première page du jeu."""
@@ -311,21 +318,27 @@ def demarrer_jeu(request: Request, jeu_id: int):
             page = cur.fetchone()
 
     page["contenu"], tts_text, tts_voix = extraire_tts(page.get("contenu", ""))
-    tts_audio = audio_for_message(
-        tts_text,
-        slug,
-        page["ordre"],
-        voix=tts_voix or jeu.get("nom_de_la_voie"),
-        voix_active=jeu.get("voie_actif", True),
-    ) if tts_text else None
+    tts_audio = (
+        audio_for_message(
+            tts_text,
+            slug,
+            page["ordre"],
+            voix=tts_voix or jeu.get("nom_de_la_voie"),
+            voix_active=jeu.get("voie_actif", True),
+        )
+        if tts_text
+        else None
+    )
 
     message = ""
     audio = None
+    context = ""
     if page.get("id_pnj"):
         pnj = charger_pnj(conn, page["id_pnj"])
         enigmes = charger_enigmes(conn, page["id_pnj"])
         prompt_pnj = construire_prompt_pnj(pnj, enigmes)
         message = ia_mistral.repond("", prompt_pnj)
+        context = f"PNJ: {message}\n"
         audio = audio_for_message(
             message,
             slug,
@@ -345,6 +358,7 @@ def demarrer_jeu(request: Request, jeu_id: int):
             "audio": audio,
             "tts_audio": tts_audio,
             "pnj_message": bool(page.get("id_pnj")),
+            "context": context,
         },
     )
     if page.get("delai_fermeture") and page.get("page_suivante"):
@@ -391,22 +405,28 @@ def afficher_page(request: Request, jeu_id: int, page_id: int):
             )
         slug = slugify(jeu["titre"])
         page["contenu"], tts_text, tts_voix = extraire_tts(page.get("contenu", ""))
-        tts_audio = audio_for_message(
-            tts_text,
-            slug,
-            page["ordre"],
-            voix=tts_voix or jeu.get("nom_de_la_voie"),
-            voix_active=jeu.get("voie_actif", True),
-        ) if tts_text else None
+        tts_audio = (
+            audio_for_message(
+                tts_text,
+                slug,
+                page["ordre"],
+                voix=tts_voix or jeu.get("nom_de_la_voie"),
+                voix_active=jeu.get("voie_actif", True),
+            )
+            if tts_text
+            else None
+        )
 
     message = ""
     audio = None
+    context = ""
     if page.get("id_pnj"):
         pnj = charger_pnj(conn, page["id_pnj"])
         enigmes = charger_enigmes(conn, page["id_pnj"])
         prompt_pnj = construire_prompt_pnj(pnj, enigmes)
         print("[DEBUG] Prompt PNJ envoyé à l’IA :\n", prompt_pnj)
         message = ia_mistral.repond("", prompt_pnj)
+        context = f"PNJ: {message}\n"
         audio = audio_for_message(
             message,
             slug,
@@ -425,7 +445,7 @@ def afficher_page(request: Request, jeu_id: int, page_id: int):
             voix=jeu.get("nom_de_la_voie"),
             voix_active=jeu.get("voie_actif", True),
         )
-    
+
     response = templates.TemplateResponse(
         "play_page.html",
         {
@@ -437,6 +457,7 @@ def afficher_page(request: Request, jeu_id: int, page_id: int):
             "audio": audio,
             "tts_audio": tts_audio,
             "pnj_message": bool(page.get("id_pnj")),
+            "context": context,
         },
     )
     if page.get("delai_fermeture") and page.get("page_suivante"):
@@ -447,7 +468,13 @@ def afficher_page(request: Request, jeu_id: int, page_id: int):
 
 
 @app.post("/play/{jeu_id}/{page_id}")
-def jouer_page(request: Request, jeu_id: int, page_id: int, saisie: str = Form("")):
+def jouer_page(
+    request: Request,
+    jeu_id: int,
+    page_id: int,
+    saisie: str = Form(""),
+    context: str = Form(""),
+):
     """Traite la saisie du joueur et applique la transition."""
     with get_conn() as conn:
         jeu = charger_jeu(conn, jeu_id)
@@ -464,21 +491,30 @@ def jouer_page(request: Request, jeu_id: int, page_id: int, saisie: str = Form("
         if transition:
             # On affiche la réponse système éventuelle puis on charge la page cible
             page = charger_page(conn, transition["id_page_cible"])
-    slug = slugify(jeu["titre"])
+            context = ""
+        slug = slugify(jeu["titre"])
     page["contenu"], tts_text, tts_voix = extraire_tts(page.get("contenu", ""))
-    tts_audio = audio_for_message(
-        tts_text,
-        slug,
-        page["ordre"],
-        voix=tts_voix or jeu.get("nom_de_la_voie"),
-        voix_active=jeu.get("voie_actif", True),
-    ) if tts_text else None
+    tts_audio = (
+        audio_for_message(
+            tts_text,
+            slug,
+            page["ordre"],
+            voix=tts_voix or jeu.get("nom_de_la_voie"),
+            voix_active=jeu.get("voie_actif", True),
+        )
+        if tts_text
+        else None
+    )
     pnj_message = False
     if page.get("id_pnj"):
-        # L'appel à l'IA ne se fait qu'au premier affichage de la page.
-        # On conserve simplement le message issu de l'analyse de saisie ou
-        # d'une éventuelle transition, sans relancer l'IA.
-        pass
+        if not transition:
+            pnj = charger_pnj(conn, page["id_pnj"])
+            enigmes = charger_enigmes(conn, page["id_pnj"])
+            prompt_base = construire_prompt_pnj(pnj, enigmes)
+            prompt = f"{prompt_base}\n{context}Joueur: {saisie}\nPNJ:"
+            message = ia_mistral.repond("", prompt)
+            context = f"{context}Joueur: {saisie}\nPNJ: {message}\n"
+            pnj_message = True
     audio = audio_for_message(
         message,
         slug,
@@ -497,6 +533,7 @@ def jouer_page(request: Request, jeu_id: int, page_id: int, saisie: str = Form("
             "audio": audio,
             "tts_audio": tts_audio,
             "pnj_message": pnj_message,
+            "context": context,
         },
     )
     if page.get("delai_fermeture") and page.get("page_suivante"):
