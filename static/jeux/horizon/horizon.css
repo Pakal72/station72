@@ -111,6 +111,10 @@ input[readonly] {
     z-index: 1000;
 }
 
+.popup-bottom {
+    top: 70%;
+}
+
 /* ==== ZONE DE SAISIE EN BAS ==== */
 .text-container-bottom {
     position: absolute;

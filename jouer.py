@@ -344,6 +344,7 @@ def demarrer_jeu(request: Request, jeu_id: int):
             "slug": slug,
             "audio": audio,
             "tts_audio": tts_audio,
+            "pnj_message": bool(page.get("id_pnj")),
         },
     )
     if page.get("delai_fermeture") and page.get("page_suivante"):
@@ -434,6 +435,7 @@ def afficher_page(request: Request, jeu_id: int, page_id: int):
             "slug": slug,
             "audio": audio,
             "tts_audio": tts_audio,
+            "pnj_message": bool(page.get("id_pnj")),
         },
     )
     if page.get("delai_fermeture") and page.get("page_suivante"):
@@ -492,6 +494,7 @@ def jouer_page(request: Request, jeu_id: int, page_id: int, saisie: str = Form("
             "slug": slug,
             "audio": audio,
             "tts_audio": tts_audio,
+            "pnj_message": bool(page.get("id_pnj")),
         },
     )
     if page.get("delai_fermeture") and page.get("page_suivante"):

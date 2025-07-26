@@ -106,14 +106,22 @@
     </script>
 {% endif %}
 {% if message %}
-    <div id="popup" class="popup">{{ message }}</div>
+    <div id="popup" class="popup{% if pnj_message %} popup-bottom{% endif %}">{{ message }}</div>
     <audio id="msg-audio" autoplay>
         <source src="{{ audio }}" type="audio/wav">
     </audio>
     <script>
     const popup = document.getElementById('popup');
     popup.style.display = 'block';
+    {% if pnj_message %}
+    const hidePopup = () => {
+        popup.style.display = 'none';
+        document.removeEventListener('keydown', hidePopup);
+    };
+    document.addEventListener('keydown', hidePopup);
+    {% else %}
     setTimeout(() => { popup.style.display = 'none'; }, 3000);
+    {% endif %}
     const audioEl = document.getElementById('msg-audio');
     audioEl.addEventListener('ended', () => {
         fetch('/delete-audio', {
