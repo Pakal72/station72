@@ -192,6 +192,144 @@ def delete_jeu(jeu_id: int):
     return RedirectResponse(url="/jeux", status_code=303)
 
 
+# ------------------------ Gestion des PNJ -------------------------
+
+@app.get("/pnj")
+def list_pnj(request: Request):
+    """Affiche la liste des PNJ."""
+    with get_conn() as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("SELECT * FROM pnj ORDER BY id")
+            pnjs = cur.fetchall()
+    return templates.TemplateResponse("pnj_index.html", {"request": request, "pnjs": pnjs})
+
+
+@app.get("/pnj/add")
+def add_pnj_form(request: Request):
+    """Formulaire d'ajout d'un PNJ."""
+    return templates.TemplateResponse("add_pnj.html", {"request": request})
+
+
+@app.post("/pnj/add")
+def add_pnj(nom: str = Form(...), personae: str = Form(""), prompt: str = Form("")):
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO pnj (nom, personae, prompt) VALUES (%s, %s, %s)",
+                (nom, personae, prompt),
+            )
+            conn.commit()
+    return RedirectResponse(url="/pnj", status_code=303)
+
+
+@app.get("/pnj/edit/{pnj_id}")
+def edit_pnj_form(request: Request, pnj_id: int):
+    with get_conn() as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("SELECT * FROM pnj WHERE id=%s", (pnj_id,))
+            pnj = cur.fetchone()
+            cur.execute("SELECT * FROM enigmes WHERE id_pnj=%s ORDER BY id", (pnj_id,))
+            enigmes = cur.fetchall()
+    return templates.TemplateResponse(
+        "add_pnj.html",
+        {"request": request, "pnj": pnj, "enigmes": enigmes},
+    )
+
+
+@app.post("/pnj/edit/{pnj_id}")
+def edit_pnj(
+    pnj_id: int,
+    nom: str = Form(...),
+    personae: str = Form(""),
+    prompt: str = Form(""),
+):
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "UPDATE pnj SET nom=%s, personae=%s, prompt=%s WHERE id=%s",
+                (nom, personae, prompt, pnj_id),
+            )
+            conn.commit()
+    return RedirectResponse(url="/pnj", status_code=303)
+
+
+@app.get("/pnj/delete/{pnj_id}")
+def delete_pnj(pnj_id: int):
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM pnj WHERE id=%s", (pnj_id,))
+            conn.commit()
+    return RedirectResponse(url="/pnj", status_code=303)
+
+
+@app.get("/enigmes/add")
+def add_enigme_form(request: Request, pnj_id: int):
+    """Formulaire d'ajout d'une énigme."""
+    return templates.TemplateResponse("add_enigme.html", {"request": request, "pnj_id": pnj_id})
+
+
+@app.post("/enigmes/add")
+def add_enigme(
+    id_pnj: int = Form(...),
+    texte_enigme: str = Form(...),
+    texte_reponse: str = Form(...),
+    textes_indices: str = Form(""),
+):
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO enigmes (id_pnj, texte_enigme, texte_reponse, textes_indices)
+                VALUES (%s, %s, %s, %s)
+                """,
+                (id_pnj, texte_enigme, texte_reponse, textes_indices),
+            )
+            conn.commit()
+    return RedirectResponse(url=f"/pnj/edit/{id_pnj}", status_code=303)
+
+
+@app.get("/enigmes/edit/{enigme_id}")
+def edit_enigme_form(request: Request, enigme_id: int):
+    with get_conn() as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("SELECT * FROM enigmes WHERE id=%s", (enigme_id,))
+            enigme = cur.fetchone()
+    return templates.TemplateResponse("add_enigme.html", {"request": request, "enigme": enigme})
+
+
+@app.post("/enigmes/edit/{enigme_id}")
+def edit_enigme(
+    enigme_id: int,
+    id_pnj: int = Form(...),
+    texte_enigme: str = Form(...),
+    texte_reponse: str = Form(...),
+    textes_indices: str = Form(""),
+):
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                UPDATE enigmes SET id_pnj=%s, texte_enigme=%s, texte_reponse=%s, textes_indices=%s
+                WHERE id=%s
+                """,
+                (id_pnj, texte_enigme, texte_reponse, textes_indices, enigme_id),
+            )
+            conn.commit()
+    return RedirectResponse(url=f"/pnj/edit/{id_pnj}", status_code=303)
+
+
+@app.get("/enigmes/delete/{enigme_id}")
+def delete_enigme(enigme_id: int):
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT id_pnj FROM enigmes WHERE id=%s", (enigme_id,))
+            pnj_id = cur.fetchone()[0]
+            cur.execute("DELETE FROM enigmes WHERE id=%s", (enigme_id,))
+            conn.commit()
+    return RedirectResponse(url=f"/pnj/edit/{pnj_id}", status_code=303)
+
+
+
 @app.get("/pages/add")
 def add_page_form(request: Request, jeu_id: int):
     """Formulaire d'ajout d'une page."""

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    {% if pnj %}
+    <title>Modifier un PNJ</title>
+    {% else %}
+    <title>Ajouter un PNJ</title>
+    {% endif %}
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        {% if pnj %}
+        <h1>✏️ Modifier un PNJ</h1>
+        <form action="/pnj/edit/{{ pnj.id }}" method="post">
+        {% else %}
+        <h1>➕ Ajouter un PNJ</h1>
+        <form action="/pnj/add" method="post">
+        {% endif %}
+            <div class="form-group">
+                <label for="nom">Nom :</label>
+                <input type="text" id="nom" name="nom" value="{{ pnj.nom if pnj else '' }}" required>
+            </div>
+            <div class="form-group">
+                <label for="personae">Personae :</label>
+                <textarea id="personae" name="personae" rows="3">{{ pnj.personae if pnj else '' }}</textarea>
+            </div>
+            <div class="form-group">
+                <label for="prompt">Prompt :</label>
+                <textarea id="prompt" name="prompt" rows="6">{{ pnj.prompt if pnj else '' }}</textarea>
+            </div>
+            <div>
+                <button type="submit" class="btn btn-primary">Enregistrer</button>
+                <a href="/pnj" class="btn btn-secondary">Annuler</a>
+            </div>
+        </form>
+
+        {% if pnj %}
+        <h2>Énigmes du PNJ</h2>
+        <a href="/enigmes/add?pnj_id={{ pnj.id }}" class="btn btn-primary">Ajouter</a>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Texte</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for e in enigmes %}
+                <tr>
+                    <td>{{ e.id }}</td>
+                    <td>{{ e.texte_enigme }}</td>
+                    <td>
+                        <a href="/enigmes/edit/{{ e.id }}" class="btn btn-secondary">Modifier</a>
+                        <a href="/enigmes/delete/{{ e.id }}" class="btn btn-danger" onclick="return confirm('Supprimer cette énigme ?');">Supprimer</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+    </div>
+</body>
+</html>
