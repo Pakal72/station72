@@ -39,7 +39,7 @@ templates = Jinja2Templates(directory="templates")
 pool: SimpleConnectionPool | None = None
 
 # IA Mistral utilisee en secours
-ia_mistral = DS9_IA("MISTRAL", "mistral-small")
+ia_mistral = DS9_IA("MISTRAL", "mistral-large-latest")
 
 # --- Paramètres synthèse vocale -------------------------------------------------
 
@@ -405,6 +405,7 @@ def afficher_page(request: Request, jeu_id: int, page_id: int):
         pnj = charger_pnj(conn, page["id_pnj"])
         enigmes = charger_enigmes(conn, page["id_pnj"])
         prompt_pnj = construire_prompt_pnj(pnj, enigmes)
+        print("[DEBUG] Prompt PNJ envoyé à l’IA :\n", prompt_pnj)
         message = ia_mistral.repond("", prompt_pnj)
         audio = audio_for_message(
             message,
