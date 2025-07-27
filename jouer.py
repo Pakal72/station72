@@ -192,9 +192,13 @@ def construire_prompt_pnj(pnj: dict, enigmes: list[dict]) -> str:
     if pnj.get("prompt"):
         sections.append(pnj["prompt"])
     for e in enigmes:
-        indice = e.get("textes_indices") or ""
+        indices_raw = e.get("textes_indices") or ""
+        indices_list = [i.strip() for i in indices_raw.splitlines() if i.strip()]
+        indices_str = "[" + ", ".join(f'"{i}"' for i in indices_list) + "]" if indices_list else "[]"
         sections.append(
-            f"Énigme : {e['texte_enigme']}\nRéponse : {e['texte_reponse']}\nIndices : {indice}"
+            f"Énigme = \"{e['texte_enigme']}\"\n"
+            f"Réponse = \"{e['texte_reponse']}\"\n"
+            f"Indices = {indices_str}"
         )
     return "\n".join(sections)
 
