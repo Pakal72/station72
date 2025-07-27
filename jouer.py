@@ -333,11 +333,12 @@ def demarrer_jeu(request: Request, jeu_id: int):
     message = ""
     audio = None
     context = ""
+    base_prompt = ""
     if page.get("id_pnj"):
         pnj = charger_pnj(conn, page["id_pnj"])
         enigmes = charger_enigmes(conn, page["id_pnj"])
-        prompt_pnj = construire_prompt_pnj(pnj, enigmes)
-        message = ia_mistral.repond("", prompt_pnj)
+        base_prompt = construire_prompt_pnj(pnj, enigmes)
+        message = ia_mistral.repond("", base_prompt)
         context = f"PNJ: {message}\n"
         audio = audio_for_message(
             message,
@@ -359,6 +360,7 @@ def demarrer_jeu(request: Request, jeu_id: int):
             "tts_audio": tts_audio,
             "pnj_message": bool(page.get("id_pnj")),
             "context": context,
+            "base_prompt": base_prompt,
         },
     )
     if page.get("delai_fermeture") and page.get("page_suivante"):
@@ -420,12 +422,13 @@ def afficher_page(request: Request, jeu_id: int, page_id: int):
     message = ""
     audio = None
     context = ""
+    base_prompt = ""
     if page.get("id_pnj"):
         pnj = charger_pnj(conn, page["id_pnj"])
         enigmes = charger_enigmes(conn, page["id_pnj"])
-        prompt_pnj = construire_prompt_pnj(pnj, enigmes)
-        print("[DEBUG] Prompt PNJ envoyé à l’IA :\n", prompt_pnj)
-        message = ia_mistral.repond("", prompt_pnj)
+        base_prompt = construire_prompt_pnj(pnj, enigmes)
+        print("[DEBUG] Prompt PNJ envoyé à l’IA :\n", base_prompt)
+        message = ia_mistral.repond("", base_prompt)
         context = f"PNJ: {message}\n"
         audio = audio_for_message(
             message,
@@ -458,6 +461,7 @@ def afficher_page(request: Request, jeu_id: int, page_id: int):
             "tts_audio": tts_audio,
             "pnj_message": bool(page.get("id_pnj")),
             "context": context,
+            "base_prompt": base_prompt,
         },
     )
     if page.get("delai_fermeture") and page.get("page_suivante"):
@@ -474,6 +478,7 @@ def jouer_page(
     page_id: int,
     saisie: str = Form(""),
     context: str = Form(""),
+    base_prompt: str = Form(""),
 ):
     """Traite la saisie du joueur et applique la transition."""
     with get_conn() as conn:
@@ -508,10 +513,11 @@ def jouer_page(
     pnj_message = False
     if page.get("id_pnj"):
         if not transition:
-            pnj = charger_pnj(conn, page["id_pnj"])
-            enigmes = charger_enigmes(conn, page["id_pnj"])
-            prompt_base = construire_prompt_pnj(pnj, enigmes)
-            prompt = f"{prompt_base}\n{context}Joueur: {saisie}\nPNJ:"
+            if not base_prompt:
+                pnj = charger_pnj(conn, page["id_pnj"])
+                enigmes = charger_enigmes(conn, page["id_pnj"])
+                base_prompt = construire_prompt_pnj(pnj, enigmes)
+            prompt = f"{base_prompt}\n{context}Joueur: {saisie}\nPNJ:"
             message = ia_mistral.repond("", prompt)
             context = f"{context}Joueur: {saisie}\nPNJ: {message}\n"
             pnj_message = True
@@ -534,6 +540,7 @@ def jouer_page(
             "tts_audio": tts_audio,
             "pnj_message": pnj_message,
             "context": context,
+            "base_prompt": base_prompt,
         },
     )
     if page.get("delai_fermeture") and page.get("page_suivante"):
