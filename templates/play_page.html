@@ -139,6 +139,7 @@
             {% endif %}
             <input class="champ-sombre" type="text" id="saisie" name="saisie" autofocus>
             <input type="hidden" name="context" value="{{ context|e }}">
+            <input type="hidden" name="base_prompt" value="{{ base_prompt|e }}">
             <button class="btn-go" type="submit">{{ page.bouton_texte or 'GO' }}</button>
         </form>
     </div>

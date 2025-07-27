@@ -84,3 +84,8 @@ Pour rendre la zone totalement invisible :
 Il est possible d'intégrer un marqueur `<!--tts:<voice>Nom de la voix</voice><texte>Votre texte</texte>-->` dans le champ **Contenu** d'une page.
 Le texte ainsi indiqué est converti en audio et joué dès l'affichage de la page,
 sans apparaître à l'écran. La balise `<voice>` permet de choisir la voix utilisée.
+
+## Dialogue avec un PNJ
+
+Si une page est associée à un PNJ, un prompt de base est construit à partir de la fiche du personnage et de ses énigmes. Ce prompt est conservé dans un champ caché et réutilisé à chaque échange.
+Tant qu'aucune intention définie n'est reconnue, l'historique du dialogue est envoyé à l'IA Mistral pour générer la réplique suivante du PNJ.
