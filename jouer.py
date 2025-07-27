@@ -112,6 +112,15 @@ def extraire_tts(contenu: str) -> tuple[str, str | None, str | None]:
     return contenu, texte, voix
 
 
+def enregistrer_prompt(prompt: str, chemin: str = "debug_prompt.txt") -> None:
+    """Écrit le contenu du ``prompt`` dans ``chemin`` pour débogage."""
+    try:
+        with open(chemin, "w", encoding="utf-8") as fichier:
+            fichier.write(prompt)
+    except Exception as exc:
+        print(f"[DEBUG] Impossible d'écrire le prompt : {exc}")
+
+
 @app.on_event("startup")
 def startup() -> None:
     """Initialise la connexion à la base de données."""
@@ -338,6 +347,7 @@ def demarrer_jeu(request: Request, jeu_id: int):
         pnj = charger_pnj(conn, page["id_pnj"])
         enigmes = charger_enigmes(conn, page["id_pnj"])
         base_prompt = construire_prompt_pnj(pnj, enigmes)
+        enregistrer_prompt(base_prompt)
         message = ia_mistral.repond("", base_prompt)
         context = f"PNJ: {message}\n"
         audio = audio_for_message(
@@ -428,6 +438,7 @@ def afficher_page(request: Request, jeu_id: int, page_id: int):
         enigmes = charger_enigmes(conn, page["id_pnj"])
         base_prompt = construire_prompt_pnj(pnj, enigmes)
         print("[DEBUG] Prompt PNJ envoyé à l’IA :\n", base_prompt)
+        enregistrer_prompt(base_prompt)
         message = ia_mistral.repond("", base_prompt)
         context = f"PNJ: {message}\n"
         audio = audio_for_message(
@@ -518,6 +529,7 @@ def jouer_page(
                 enigmes = charger_enigmes(conn, page["id_pnj"])
                 base_prompt = construire_prompt_pnj(pnj, enigmes)
             prompt = f"{base_prompt}\n{context}Joueur: {saisie}\nPNJ:"
+            enregistrer_prompt(prompt)
             message = ia_mistral.repond("", prompt)
             context = f"{context}Joueur: {saisie}\nPNJ: {message}\n"
             pnj_message = True
