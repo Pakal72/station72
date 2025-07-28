@@ -2,7 +2,6 @@ from fastapi import FastAPI, Request, Form
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
-import psycopg2
 from psycopg2.extras import RealDictCursor
 from psycopg2.pool import SimpleConnectionPool
 from contextlib import contextmanager
@@ -128,7 +127,15 @@ def add_jeu(
         with conn.cursor() as cur:
             cur.execute(
                 "INSERT INTO jeux (titre, auteur, ia_nom, synopsis, mot_de_passe, nom_de_la_voie, voie_actif) VALUES (%s, %s, %s, %s, %s, %s, %s)",
-                (titre, auteur, ia_nom, synopsis, motdepasse, nom_de_la_voie or None, voie_actif),
+                (
+                    titre,
+                    auteur,
+                    ia_nom,
+                    synopsis,
+                    motdepasse,
+                    nom_de_la_voie or None,
+                    voie_actif,
+                ),
             )
             conn.commit()
     ensure_game_dirs(titre)
@@ -175,7 +182,16 @@ def edit_jeu(
         with conn.cursor() as cur:
             cur.execute(
                 "UPDATE jeux SET titre=%s, auteur=%s, ia_nom=%s, nom_de_la_voie=%s, voie_actif=%s, synopsis=%s, mot_de_passe=%s WHERE id_jeu=%s",
-                (titre, auteur, ia_nom, nom_de_la_voie or None, voie_actif, synopsis, motdepasse, jeu_id),
+                (
+                    titre,
+                    auteur,
+                    ia_nom,
+                    nom_de_la_voie or None,
+                    voie_actif,
+                    synopsis,
+                    motdepasse,
+                    jeu_id,
+                ),
             )
             conn.commit()
     ensure_game_dirs(titre)
@@ -194,6 +210,7 @@ def delete_jeu(jeu_id: int):
 
 # ------------------------ Gestion des PNJ -------------------------
 
+
 @app.get("/pnj")
 def list_pnj(request: Request, jeu_id: int):
     """Affiche la liste des PNJ pour un jeu."""
@@ -203,13 +220,18 @@ def list_pnj(request: Request, jeu_id: int):
             jeu = cur.fetchone()
             cur.execute("SELECT * FROM pnj WHERE id_jeu=%s ORDER BY id", (jeu_id,))
             pnjs = cur.fetchall()
-    return templates.TemplateResponse("pnj_index.html", {"request": request, "pnjs": pnjs, "jeu_id": jeu_id, "jeu": jeu})
+    return templates.TemplateResponse(
+        "pnj_index.html",
+        {"request": request, "pnjs": pnjs, "jeu_id": jeu_id, "jeu": jeu},
+    )
 
 
 @app.get("/pnj/add")
 def add_pnj_form(request: Request, jeu_id: int):
     """Formulaire d'ajout d'un PNJ."""
-    return templates.TemplateResponse("add_pnj.html", {"request": request, "jeu_id": jeu_id})
+    return templates.TemplateResponse(
+        "add_pnj.html", {"request": request, "jeu_id": jeu_id}
+    )
 
 
 @app.post("/pnj/add")
@@ -217,7 +239,7 @@ def add_pnj(
     jeu_id: int = Form(...),
     nom: str = Form(...),
     personae: str = Form(""),
-    prompt: str = Form("")
+    prompt: str = Form(""),
 ):
     with get_conn() as conn:
         with conn.cursor() as cur:
@@ -249,7 +271,7 @@ def edit_pnj(
     jeu_id: int = Form(...),
     nom: str = Form(...),
     personae: str = Form(""),
-    prompt: str = Form("")
+    prompt: str = Form(""),
 ):
     with get_conn() as conn:
         with conn.cursor() as cur:
@@ -275,7 +297,9 @@ def delete_pnj(pnj_id: int):
 @app.get("/enigmes/add")
 def add_enigme_form(request: Request, pnj_id: int):
     """Formulaire d'ajout d'une énigme."""
-    return templates.TemplateResponse("add_enigme.html", {"request": request, "pnj_id": pnj_id})
+    return templates.TemplateResponse(
+        "add_enigme.html", {"request": request, "pnj_id": pnj_id}
+    )
 
 
 @app.post("/enigmes/add")
@@ -304,7 +328,9 @@ def edit_enigme_form(request: Request, enigme_id: int):
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute("SELECT * FROM enigmes WHERE id=%s", (enigme_id,))
             enigme = cur.fetchone()
-    return templates.TemplateResponse("add_enigme.html", {"request": request, "enigme": enigme})
+    return templates.TemplateResponse(
+        "add_enigme.html", {"request": request, "enigme": enigme}
+    )
 
 
 @app.post("/enigmes/edit/{enigme_id}")
@@ -339,7 +365,6 @@ def delete_enigme(enigme_id: int):
     return RedirectResponse(url=f"/pnj/edit/{pnj_id}", status_code=303)
 
 
-
 @app.get("/pages/add")
 def add_page_form(request: Request, jeu_id: int):
     """Formulaire d'ajout d'une page."""
@@ -356,7 +381,8 @@ def add_page_form(request: Request, jeu_id: int):
             )
             pnjs = cur.fetchall()
     return templates.TemplateResponse(
-        "add_page.html", {"request": request, "jeu_id": jeu_id, "pages": pages, "pnjs": pnjs}
+        "add_page.html",
+        {"request": request, "jeu_id": jeu_id, "pages": pages, "pnjs": pnjs},
     )
 
 
@@ -712,16 +738,7 @@ def demarrer_jeu(request: Request, jeu_id: int):
             )
             page = cur.fetchone()
 
-    print("[DEBUG] ROUTE ACTUELLE : /play")
-    message = f"Page {page['ordre']}, {jeu['titre']}"
-    print("[DEBUG] Message à lire :", message)
-    audio = audio_for_message(
-        message,
-        slug,
-        page["ordre"],
-        voix=jeu.get("nom_de_la_voie"),
-        voix_active=jeu.get("voie_actif", True),
-    )
+    audio = None
 
     response = templates.TemplateResponse(
         "play_page.html",
@@ -757,16 +774,7 @@ def afficher_page(request: Request, jeu_id: int, page_id: int):
             )
         slug = slugify(jeu["titre"])
 
-    print("[DEBUG] ROUTE ACTUELLE : /play")
-    message = f"Page {page['ordre']}, {jeu['titre']}"
-    print("[DEBUG] Message à lire :", message)
-    audio = audio_for_message(
-        message,
-        slug,
-        page["ordre"],
-        voix=jeu.get("nom_de_la_voie"),
-        voix_active=jeu.get("voie_actif", True),
-    )
+    audio = None
 
     response = templates.TemplateResponse(
         "play_page.html",
