@@ -194,7 +194,11 @@ def construire_prompt_pnj(pnj: dict, enigmes: list[dict]) -> str:
     for e in enigmes:
         indices_raw = e.get("textes_indices") or ""
         indices_list = [i.strip() for i in indices_raw.splitlines() if i.strip()]
-        indices_str = "[" + ", ".join(f'"{i}"' for i in indices_list) + "]" if indices_list else "[]"
+        indices_str = (
+            "[" + ", ".join(f'"{i}"' for i in indices_list) + "]"
+            if indices_list
+            else "[]"
+        )
         sections.append(
             f"Énigme = \"{e['texte_enigme']}\"\n"
             f"Réponse = \"{e['texte_reponse']}\"\n"
@@ -453,16 +457,7 @@ def afficher_page(request: Request, jeu_id: int, page_id: int):
             voix_active=jeu.get("voie_actif", True),
         )
     else:
-        print("[DEBUG] ROUTE ACTUELLE : /play")
-        message = f"Page {page['ordre']}, {jeu['titre']}"
-        print("[DEBUG] Message à lire :", message)
-        audio = audio_for_message(
-            message,
-            slug,
-            page["ordre"],
-            voix=jeu.get("nom_de_la_voie"),
-            voix_active=jeu.get("voie_actif", True),
-        )
+        audio = None
 
     response = templates.TemplateResponse(
         "play_page.html",
