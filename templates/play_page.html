@@ -172,6 +172,25 @@ document.addEventListener('click', evt => {
         form.requestSubmit();
     }
 });
+
+function ds9Executer(fonction, argument = null) {
+    fetch("/api/ds9_exec", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fonction: fonction, argument: argument })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.status === "ok") {
+            console.log("✅ Succès :", data.resultat);
+        } else {
+            alert("❌ Erreur : " + data.message);
+        }
+    })
+    .catch(e => alert("❌ Erreur réseau : " + e));
+}
 </script>
+
+
 </body>
 </html>

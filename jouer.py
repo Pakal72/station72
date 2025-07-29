@@ -13,6 +13,8 @@ import re
 import unicodedata
 import os
 import uvicorn
+from ds9_homeassistant import *
+from pydantic import BaseModel
 
 load_dotenv()
 
@@ -22,6 +24,27 @@ DB_NAME = os.getenv("DB_NAME")
 DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 
+class DS9Execution(BaseModel):
+    fonction: str
+    argument: str | None = None
+
+@app.post("/api/ds9_exec")
+def executer_fonction(data: DS9Execution):
+    try:
+        # Cherche la fonction dans le module courant (importée via `from ds9_homeassistant import *`)
+        fn = globals().get(data.fonction)
+        if not callable(fn):
+            return {"status": "erreur", "message": f"Fonction {data.fonction} introuvable."}
+        
+        # Appelle avec ou sans argument
+        if data.argument:
+            result = fn(data.argument)
+        else:
+            result = fn()
+
+        return {"status": "ok", "resultat": result}
+    except Exception as e:
+        return {"status": "erreur", "message": str(e)}
 
 def slugify(text: str) -> str:
     """Transforme un texte en slug ASCII en minuscules."""
