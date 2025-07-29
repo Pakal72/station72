@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """------------------------------------------------------------------------------------------------------"""
 """| Fonctions utilitaires pour interagir avec l'API REST de Home Assistant.                            |"""
 """------------------------------------------------------------------------------------------------------"""
@@ -5,8 +7,6 @@
 """|                Variable du .env : HA_URL et HA_TOKEN                                               |"""
 """|                                                                                                    |"""
 """------------------------------------------------------------------------------------------------------"""
-
-from __future__ import annotations
 
 import os
 from typing import Any
@@ -147,3 +147,18 @@ def ds9_Ecrit_Log(message: str, titre: str = "Station79") -> bool:
     return _appelle_service_ha(
         "persistent_notification", "create", "", title=titre, message=message
     )
+
+def ds9_Declenche_Script(entity_id: str) -> bool:
+    """Déclenche un script Home Assistant."""
+    return _appelle_service_ha("script", "turn_on", entity_id)
+
+
+if __name__ == "__main__":
+
+    print("Seuil VMC Cave :", ds9_Lit_Etat("input_number.seuil_vmc_cave"))
+
+    #print("Toogle Bureau :",ds9_Toggle_Commutateur("switch.sonoff_1000b8576e"))
+
+
+    print("PYTHON01 :", ds9_Declenche_Script("script.PYTHON01"))
+
