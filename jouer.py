@@ -18,6 +18,10 @@ from pydantic import BaseModel
 
 load_dotenv()
 
+app = FastAPI()
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
+
 DB_HOST = os.getenv("DB_HOST")
 DB_PORT = os.getenv("DB_PORT")
 DB_NAME = os.getenv("DB_NAME")
@@ -54,10 +58,6 @@ def slugify(text: str) -> str:
     text = re.sub(r"[^a-z0-9]+", "-", text)
     return text.strip("-")
 
-
-app = FastAPI()
-app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="templates")
 
 pool: SimpleConnectionPool | None = None
 
