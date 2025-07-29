@@ -148,9 +148,12 @@ def ds9_Ecrit_Log(message: str, titre: str = "Station79") -> bool:
         "persistent_notification", "create", "", title=titre, message=message
     )
 
-def ds9_Declenche_Script(entity_id: str) -> bool:
-    """Déclenche un script Home Assistant."""
-    return _appelle_service_ha("script", "turn_on", entity_id)
+def ds9_Declenche_Script(nom_script: str) -> bool:
+    """Déclenche un script Home Assistant, accepte nom court ou complet."""
+    if not nom_script.startswith("script."):
+        nom_script = f"script.{nom_script.lower()}"
+    return _appelle_service_ha("script", "turn_on", nom_script)
+
 
 
 if __name__ == "__main__":
@@ -160,5 +163,5 @@ if __name__ == "__main__":
     #print("Toogle Bureau :",ds9_Toggle_Commutateur("switch.sonoff_1000b8576e"))
 
 
-    print("PYTHON01 :", ds9_Declenche_Script("script.PYTHON01"))
+    print("PYTHON01 :", ds9_Declenche_Script("PYTHON01"))
 
